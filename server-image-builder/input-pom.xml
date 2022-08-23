@@ -97,32 +97,39 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                             <goal>build</goal>
                         </goals>
                         <configuration>
-                            <skip>${wildfly.cloud.test.skip.image}</skip>
                             <images>
                                 <image>
                                     <name>wildfly-cloud-test-image/${project.name}:latest</name>
                                     <alias>server</alias>
                                     <build>
                                         <from>${image.name.wildfly.runtime}</from>
-                                        <assembly>
-                                            <mode>dir</mode>
-                                            <user>jboss:root</user>
-                                            <targetDir>/opt/server</targetDir>
-                                            <inline>
-                                                <formats>
-                                                    <format>dir</format>
-                                                </formats>
-                                                <fileSets>
-                                                    <fileSet>
-                                                        <directory>target/server</directory>
-                                                        <outputDirectory>/</outputDirectory>
-                                                        <includes>
-                                                            <include>**</include>
-                                                        </includes>
-                                                    </fileSet>
-                                                </fileSets>
-                                            </inline>
-                                        </assembly>
+                                        <env>
+                                            <!--<?CLI_SCRIPT_ENV_VAR?>-->
+                                        </env>
+                                        <assemblies>
+                                            <assembly>\
+                                                <name>copy-server</name>
+                                                <mode>dir</mode>
+                                                <user>jboss:root</user>
+                                                <targetDir>/opt/server</targetDir>
+                                                <inline>
+                                                    <formats>
+                                                        <format>dir</format>
+                                                    </formats>
+                                                    <fileSets>
+                                                        <fileSet>
+                                                            <directory>target/server</directory>
+                                                            <outputDirectory>/</outputDirectory>
+                                                            <includes>
+                                                                <include>**</include>
+                                                            </includes>
+                                                        </fileSet>
+                                                    </fileSets>
+                                                </inline>
+                                            </assembly>
+                                            <!-- Replaced with contents of input-copy-init-cli.xml if required -->
+                                            <?COPY_CLI?>
+                                        </assemblies>
                                     </build>
                                 </image>
                             </images>

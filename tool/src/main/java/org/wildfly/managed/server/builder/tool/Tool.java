@@ -18,6 +18,7 @@
 
 package org.wildfly.managed.server.builder.tool;
 
+import org.wildfly.managed.server.builder.tool.parser.DockerCopyInitCliParser;
 import org.wildfly.managed.server.builder.tool.parser.ServerConfigParser;
 import org.wildfly.managed.server.builder.tool.parser.FormattingXMLStreamWriter;
 import org.wildfly.managed.server.builder.tool.parser.Node;
@@ -35,22 +36,27 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class Tool {
     private final Environment environment;
+    Path serverConfigXmlPath;
+    Path serverInitCliPath;
 
     public Tool(Environment environment) {
         this.environment = environment;
+        serverConfigXmlPath = environment.getServerImageBuilderLocation().resolve(Environment.SERVER_CONFIG_FILE_NAME);
+        serverInitCliPath = environment.getServerImageBuilderLocation().resolve(Environment.SERVER_INIT_FILE_NAME);
     }
 
     void prepareDeployment() throws Exception {
         copyDeploymentToServerImageBuilder();
-        Path path = getServerConfigXmlContentsFromDeployment();
+        getServerConfigXmlContentsFromDeployment();
 
-        mergeInputPomAndServerConfigXml(path);
+        mergeInputPomAndServerConfigXml();
 
 
 
@@ -72,9 +78,9 @@ public class Tool {
         }
     }
 
-    private Path getServerConfigXmlContentsFromDeployment() throws IOException {
-        boolean found = false;
-        Path serverConfigXmlPath = environment.getServerImageBuilderLocation().resolve(Environment.SERVER_CONFIG_FILE_NAME);
+    private void getServerConfigXmlContentsFromDeployment() throws IOException {
+        boolean foundServerConfigXml = false;
+        boolean foundServerInitCli = false;
         try (ZipInputStream zin =
                      new ZipInputStream(
                              new BufferedInputStream(
@@ -84,17 +90,17 @@ public class Tool {
             while (entry != null) {
                 try {
                     if (entry.getName().equals(Environment.SERVER_CONFIG_JAR_LOCATION_A) || entry.getName().equals(Environment.SERVER_CONFIG_JAR_LOCATION_B)) {
-                        if (found) {
+                        if (foundServerConfigXml) {
                             throw new IllegalStateException("The archive contains duplicate " + Environment.SERVER_CONFIG_FILE_NAME + " files");
                         }
-                        found = true;
-                        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(serverConfigXmlPath.toFile()))) {
-                            byte[] buffer = new byte[8192];
-                            int len;
-                            while ((len = zin.read(buffer)) > 0) {
-                                out.write(buffer, 0, len);
-                            }
+                        foundServerConfigXml = true;
+                        extractCurrentFile(zin, serverConfigXmlPath);
+                    } else if (entry.getName().equals(Environment.SERVER_INIT_JAR_LOCATION_A) || entry.getName().equals(Environment.SERVER_INIT_JAR_LOCATION_B)) {
+                        if (foundServerInitCli) {
+                            throw new IllegalStateException("The archive contains duplicate " + Environment.SERVER_INIT_FILE_NAME + " files");
                         }
+                        foundServerInitCli = true;
+                        extractCurrentFile(zin, serverInitCliPath);
                     }
                 } finally {
                     zin.closeEntry();
@@ -102,20 +108,29 @@ public class Tool {
                 }
             }
         }
-        if (!found) {
+        if (!foundServerConfigXml) {
             throw new IllegalStateException("The deployment does not contain a " + Environment.SERVER_CONFIG_JAR_LOCATION_A + " file");
         }
-        return serverConfigXmlPath;
     }
 
-    private void mergeInputPomAndServerConfigXml(Path serverConfigXmlPath) throws XMLStreamException, IOException {
+    private void extractCurrentFile(ZipInputStream zin, Path path) throws IOException {
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(path.toFile()))) {
+            byte[] buffer = new byte[8192];
+            int len;
+            while ((len = zin.read(buffer)) > 0) {
+                out.write(buffer, 0, len);
+            }
+        }
+    }
+
+    private void mergeInputPomAndServerConfigXml() throws XMLStreamException, IOException {
         // Parse this, so we
         // - can easily get rid of the root element
         // - have some kind of structure in case we need to validate/enhance entries
         ServerConfigParser serverConfigXmlParser = new ServerConfigParser(serverConfigXmlPath);
         serverConfigXmlParser.parse();
 
-        // Parse the pon
+        // Parse the pom
         PomParser pomParser = new PomParser(environment.getInputPomLocation());
         pomParser.parse();
 
@@ -127,6 +142,18 @@ public class Tool {
         for (Node node : serverConfigXmlParser.getRootNode().getChildren()) {
              mavenPluginConfigPlaceholder.addDelegate(node, true);
         }
+
+        // If there was a server-init.cli, add instructions to copy it
+        if (Files.exists(serverInitCliPath)) {
+            ProcessingInstructionNode dockerCopyCliPlaceholder = pomParser.getDockerCopyCliPlaceholder();
+            if (mavenPluginConfigPlaceholder == null) {
+                throw new IllegalStateException(environment.getInputPomLocation() + " is missing the <?" + PomParser.DOCKER_COPY_CLI_PI + "?> procesing instruction");
+            }
+            DockerCopyInitCliParser dockerCopyInitCliParser = new DockerCopyInitCliParser(environment.getInputCopyInitCliLocation());
+            dockerCopyInitCliParser.parse();
+            dockerCopyCliPlaceholder.addDelegate(dockerCopyInitCliParser.getRootNode(), true);
+        }
+
 
         // Write the updated pom
         FormattingXMLStreamWriter writer =

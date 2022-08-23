@@ -1,0 +1,20 @@
+<assembly>
+    <name>copy-init-cli</name>
+    <mode>dir</mode>
+    <user>jboss:root</user>
+    <targetDir>/opt/server</targetDir>
+    <inline>
+        <formats>
+            <format>dir</format>
+        </formats>
+        <fileSets>
+            <fileSet>
+                <directory>.</directory>
+                <outputDirectory>/</outputDirectory>
+                <includes>
+                    <include>server-init.cli</include>
+                </includes>
+            </fileSet>
+        </fileSets>
+    </inline>
+</assembly>

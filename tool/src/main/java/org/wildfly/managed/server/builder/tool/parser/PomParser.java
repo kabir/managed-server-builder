@@ -35,11 +35,13 @@ import static javax.xml.stream.XMLStreamConstants.START_DOCUMENT;
  */
 public class PomParser extends NodeParser {
     public static final String MAVEN_PLUGIN_CONFIG_PI = "MAVEN_PLUGIN_CONFIG";
+    public static final String DOCKER_COPY_CLI_PI = "COPY_CLI";
     private static final String ROOT_ELEMENT_NAME = "project";
     private final Path inputFile;
     private ElementNode root;
 
     private ProcessingInstructionNode mavenPluginConfigPlaceholder;
+    private ProcessingInstructionNode dockerCopyCliPlaceholder;
 
     public PomParser(Path inputFile) {
         this.inputFile = inputFile;
@@ -51,6 +53,10 @@ public class PomParser extends NodeParser {
 
     public ProcessingInstructionNode getMavenPluginConfigPlaceholder() {
         return mavenPluginConfigPlaceholder;
+    }
+
+    public ProcessingInstructionNode getDockerCopyCliPlaceholder() {
+        return dockerCopyCliPlaceholder;
     }
 
     public void parse() throws IOException, XMLStreamException {
@@ -79,16 +85,25 @@ public class PomParser extends NodeParser {
         String pi = reader.getPITarget();
         Map<String, String> data = parseProcessingInstructionData(reader.getPIData());
         if (pi.equals(MAVEN_PLUGIN_CONFIG_PI)) {
-            if (!data.isEmpty()) {
-                throw new IllegalStateException("<?" + MAVEN_PLUGIN_CONFIG_PI + "?> should not take any data");
-            }
-            if (mavenPluginConfigPlaceholder != null) {
-                throw new IllegalStateException("Can only have one occurance of <?" + MAVEN_PLUGIN_CONFIG_PI + "?>");
-            }
-            node = new ProcessingInstructionNode(parent, MAVEN_PLUGIN_CONFIG_PI, null);
+            node = createProcessingInstruction(data, parent, pi, mavenPluginConfigPlaceholder);
             mavenPluginConfigPlaceholder = node;
+        } else if (pi.equals(DOCKER_COPY_CLI_PI)) {
+            node = createProcessingInstruction(data, parent, pi, dockerCopyCliPlaceholder);
+            dockerCopyCliPlaceholder = node;
         } else {
             throw new IllegalStateException("Unknown processing instruction <?" + reader.getPITarget() + "?>" + reader.getLocation());
-        }        return node;
+        }
+        return node;
+    }
+
+    private ProcessingInstructionNode createProcessingInstruction(
+            Map<String, String> data, ElementNode parent, String processingInstructionName, ProcessingInstructionNode existing) {
+        if (!data.isEmpty()) {
+            throw new IllegalStateException("<?" + processingInstructionName + "?> should not take any data");
+        }
+        if (existing != null) {
+            throw new IllegalStateException("Can only have one occurance of <?" + processingInstructionName + "?>");
+        }
+        return new ProcessingInstructionNode(parent, processingInstructionName, null);
     }
 }
