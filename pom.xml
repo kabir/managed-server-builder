@@ -35,15 +35,8 @@
     <packaging>pom</packaging>
 
     <properties>
-        <version.wildfly>27.0.0.Alpha4-SNAPSHOT</version.wildfly>
-        <version.wildfly.cloud.galleon.pack>2.0.0.Alpha4</version.wildfly.cloud.galleon.pack>
-        <version.wildfly.datasources.galleon.pack>2.2.2.Final</version.wildfly.datasources.galleon.pack>
-
-
-        <!-- Plugin versions -->
-        <version.io.fabric8.docker-maven-plugin>0.39.0</version.io.fabric8.docker-maven-plugin>
-        <version.org.apache.maven.plugins.maven-failsafe-plugin>3.0.0-M3</version.org.apache.maven.plugins.maven-failsafe-plugin>
-        <version.org.wildfly.plugins.wildfly-maven-plugin>4.0.0.Beta3</version.org.wildfly.plugins.wildfly-maven-plugin>
+        <!-- Note that server-image-builder is independent of this pom, and needs its versions updated -->
+        <version.wildfly>27.0.0.Alpha4</version.wildfly>
 
         <!-- Misc -->
         <maven.compiler.source>11</maven.compiler.source>
@@ -58,11 +51,6 @@
                 <version>${version.wildfly}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>io.fabric8</groupId>
-                <artifactId>kubernetes-client</artifactId>
-                <version>${version.io.fabric8.kubernetes}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

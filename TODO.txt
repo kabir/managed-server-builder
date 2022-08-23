@@ -8,7 +8,6 @@ General
 * I don't think the user should need to specify the WildFly version. Rather that is the job of the managed service to use the latest.
 -- Same for the other feature packs we ship?
 -- What about user feature packs. Is that something we will support?
-* Version the plugins
 
 Docker image
 ============
