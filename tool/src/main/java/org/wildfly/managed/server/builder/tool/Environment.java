@@ -30,7 +30,8 @@ import java.nio.file.Paths;
 
 public class Environment implements AutoCloseable {
     static final String SERVER_CONFIG_FILE_NAME = "server-config.xml";
-    static final String SERVER_CONFIG_PATH = "META-INF/" + SERVER_CONFIG_FILE_NAME;
+    static final String SERVER_CONFIG_JAR_LOCATION_A = "META-INF/" + SERVER_CONFIG_FILE_NAME;
+    static final String SERVER_CONFIG_JAR_LOCATION_B = "WEB-INF/classes/META-INF/" + SERVER_CONFIG_FILE_NAME;
 
     private static final Entry WAR_LOCATION =
             new Entry(true,

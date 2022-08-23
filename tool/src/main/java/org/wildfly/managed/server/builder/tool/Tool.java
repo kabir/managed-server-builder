@@ -83,7 +83,10 @@ public class Tool {
             ZipEntry entry = zin.getNextEntry();
             while (entry != null) {
                 try {
-                    if (entry.getName().endsWith(Environment.SERVER_CONFIG_PATH)) {
+                    if (entry.getName().equals(Environment.SERVER_CONFIG_JAR_LOCATION_A) || entry.getName().equals(Environment.SERVER_CONFIG_JAR_LOCATION_B)) {
+                        if (found) {
+                            throw new IllegalStateException("The archive contains duplicate " + Environment.SERVER_CONFIG_FILE_NAME + " files");
+                        }
                         found = true;
                         try (OutputStream out = new BufferedOutputStream(new FileOutputStream(serverConfigXmlPath.toFile()))) {
                             byte[] buffer = new byte[8192];
@@ -100,7 +103,7 @@ public class Tool {
             }
         }
         if (!found) {
-            throw new IllegalStateException("The deployment does not contain a " + Environment.SERVER_CONFIG_PATH + " file");
+            throw new IllegalStateException("The deployment does not contain a " + Environment.SERVER_CONFIG_JAR_LOCATION_A + " file");
         }
         return serverConfigXmlPath;
     }
