@@ -17,3 +17,7 @@ Docker image
 - Run the maven build to provision the server and create the image
 * How to name the image?
 * Once built where should it be pushed to?
+
+* Metrics about how it is running - we need to know who is using what
+-- Where is this stored?
+* YAML as an alternative to CLI configuration

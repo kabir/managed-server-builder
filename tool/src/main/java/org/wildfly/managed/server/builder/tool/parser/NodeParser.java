@@ -85,7 +85,12 @@ class NodeParser {
                 }
                 break;
             case PROCESSING_INSTRUCTION:
-                throw new IllegalStateException("Processing instructions not supported");
+                ProcessingInstructionNode node = parseProcessingInstruction(reader, currentNode);
+                if (node != null) {
+                    currentNode.addChild(node);
+                }
+
+                break;
             default:
                 break;
             }
@@ -105,6 +110,52 @@ class NodeParser {
             childNode.addAttribute(name, createAttributeValue(value));
         }
         return childNode;
+    }
+
+    protected ProcessingInstructionNode parseProcessingInstruction(XMLStreamReader reader, ElementNode parent) throws XMLStreamException {
+        return null;
+    }
+
+    protected Map<String, String> parseProcessingInstructionData(String data) {
+        if (data == null) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, String> attributes = new HashMap<String, String>();
+        StringBuilder builder = new StringBuilder();
+        String name = null;
+
+        final byte READ_NAME = 0x1;
+        final byte ATTRIBUTE_START = 0x3;
+        final byte ATTRIBUTE = 0x4;
+
+        byte state = READ_NAME;
+        char[] chars = data.toCharArray();
+        for (int i = 0 ; i < chars.length ; i++) {
+            char c = chars[i];
+            if (state == READ_NAME) {
+                if (c == '=') {
+                    state = ATTRIBUTE_START;
+                    name = builder.toString();
+                    builder = new StringBuilder();
+                } else if (c == ' ') {
+                } else {
+                    builder.append(c);
+                }
+            } else if (state == ATTRIBUTE_START) {
+                //open quote
+                state = ATTRIBUTE;
+            } else if (state == ATTRIBUTE) {
+                if (c == '\"') {
+                    attributes.put(name.toString(), builder.toString());
+                    builder = new StringBuilder();
+                    state = READ_NAME;
+                } else {
+                    builder.append(c);
+                }
+            }
+        }
+        return attributes;
     }
 
     protected AttributeValue createAttributeValue(String attributeValue) {

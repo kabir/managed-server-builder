@@ -18,6 +18,7 @@
 package org.wildfly.managed.server.builder.tool.parser;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -49,6 +50,22 @@ public class ElementNode extends Node {
         this.namespace = namespace == null ? namespace : namespace.isEmpty() ? null : namespace;
     }
 
+    public ElementNode updateForNewNsAndParent(ElementNode parent, String namespace) {
+        ElementNode copy = new ElementNode(parent, this.name, namespace);
+        copy.attributes.putAll(this.attributes);
+
+        for (Node child : children) {
+            if (child instanceof ElementNode) {
+                copy.children.add(((ElementNode) child).updateForNewNsAndParent(copy, namespace));
+            } else {
+                copy.children.add(child);
+            }
+        }
+        return copy;
+    }
+
+
+
     public String getNamespace() {
         return namespace;
     }
@@ -65,8 +82,8 @@ public class ElementNode extends Node {
         children.add(child);
     }
 
-    public Iterator<Node> getChildren() {
-        return children.iterator();
+    public Collection<Node> getChildren() {
+        return children;
     }
 
     public ElementNode getParent() {

@@ -42,14 +42,18 @@ public class Environment implements AutoCloseable {
                     "wildfly.builder.server.image.builder.location",
                     "WILDFLY_BUILDER_SERVER_IMAGE_BUILDER_LOCATION");
 
-    private InputStream warInputStream;
-    private Path serverImageBuilderLocation;
-    private Path serverImageDeploymentLocation;
+    private final InputStream warInputStream;
+    private final Path serverImageBuilderLocation;
+    private final Path serverImageDeploymentLocation;
+    private final Path inputPomLocation;
+    private final Path createdPomLocation;
 
     public Environment(InputStream warInputStream, Path serverImageBuilderLocation) {
         this.warInputStream = warInputStream;
         this.serverImageBuilderLocation = serverImageBuilderLocation;
         this.serverImageDeploymentLocation = serverImageBuilderLocation.resolve("ROOT.war");
+        inputPomLocation = serverImageBuilderLocation.resolve("input-pom.xml");
+        createdPomLocation = serverImageBuilderLocation.resolve("pom.xml");
     }
 
     public InputStream getWarInputStream() {
@@ -62,6 +66,14 @@ public class Environment implements AutoCloseable {
 
     public Path getServerImageDeploymentLocation() {
         return serverImageDeploymentLocation;
+    }
+
+    public Path getInputPomLocation() {
+        return inputPomLocation;
+    }
+
+    public Path getCreatedPomLocation() {
+        return createdPomLocation;
     }
 
     @Override

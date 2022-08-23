@@ -33,17 +33,24 @@ import static javax.xml.stream.XMLStreamConstants.START_DOCUMENT;
  *
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  */
-public class EapXmlParser extends NodeParser {
-    private static final String ROOT_ELEMENT_NAME = "eap";
+public class PomParser extends NodeParser {
+    public static final String MAVEN_PLUGIN_CONFIG_PI = "MAVEN_PLUGIN_CONFIG";
+    private static final String ROOT_ELEMENT_NAME = "project";
     private final Path inputFile;
     private ElementNode root;
 
-    public EapXmlParser(Path inputFile) {
+    private ProcessingInstructionNode mavenPluginConfigPlaceholder;
+
+    public PomParser(Path inputFile) {
         this.inputFile = inputFile;
     }
 
     public ElementNode getRootNode() {
         return root;
+    }
+
+    public ProcessingInstructionNode getMavenPluginConfigPlaceholder() {
+        return mavenPluginConfigPlaceholder;
     }
 
     public void parse() throws IOException, XMLStreamException {
@@ -63,5 +70,25 @@ public class EapXmlParser extends NodeParser {
             } catch (Exception ignore) {
             }
         }
+    }
+
+
+    @Override
+    protected ProcessingInstructionNode parseProcessingInstruction(XMLStreamReader reader, ElementNode parent) throws XMLStreamException {
+        ProcessingInstructionNode node;
+        String pi = reader.getPITarget();
+        Map<String, String> data = parseProcessingInstructionData(reader.getPIData());
+        if (pi.equals(MAVEN_PLUGIN_CONFIG_PI)) {
+            if (!data.isEmpty()) {
+                throw new IllegalStateException("<?" + MAVEN_PLUGIN_CONFIG_PI + "?> should not take any data");
+            }
+            if (mavenPluginConfigPlaceholder != null) {
+                throw new IllegalStateException("Can only have one occurance of <?" + MAVEN_PLUGIN_CONFIG_PI + "?>");
+            }
+            node = new ProcessingInstructionNode(parent, MAVEN_PLUGIN_CONFIG_PI, null);
+            mavenPluginConfigPlaceholder = node;
+        } else {
+            throw new IllegalStateException("Unknown processing instruction <?" + reader.getPITarget() + "?>" + reader.getLocation());
+        }        return node;
     }
 }

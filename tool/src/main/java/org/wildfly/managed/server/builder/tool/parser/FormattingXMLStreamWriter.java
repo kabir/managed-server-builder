@@ -38,7 +38,7 @@ import javax.xml.stream.XMLStreamWriter;
  * @author <a href="mailto:david.lloyd@redhat.com">David M. Lloyd</a>
  * @author Kabir Khan
  */
-final class FormattingXMLStreamWriter implements XMLStreamWriter, XMLStreamConstants {
+public final class FormattingXMLStreamWriter implements XMLStreamWriter, XMLStreamConstants {
     private static final String NO_NAMESPACE = new String();
     private final XMLStreamWriter delegate;
     private int level;

@@ -20,11 +20,19 @@ package org.wildfly.managed.server.builder.tool;
 
 import org.wildfly.managed.server.builder.tool.parser.EapXmlParser;
 import org.wildfly.managed.server.builder.tool.parser.ElementNode;
+import org.wildfly.managed.server.builder.tool.parser.FormattingXMLStreamWriter;
+import org.wildfly.managed.server.builder.tool.parser.Node;
+import org.wildfly.managed.server.builder.tool.parser.PomParser;
+import org.wildfly.managed.server.builder.tool.parser.ProcessingInstructionNode;
 
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -43,12 +51,7 @@ public class Tool {
         copyDeploymentToServerImageBuilder();
         Path path = getEapXmlContentsFromDeployment();
 
-        // Parse this, so we
-        // - can easily get rid of the root element
-        // - have some kind of structure in case we need to validate/enhance entries
-        EapXmlParser eapXmlParser = new EapXmlParser(path, "eap");
-        eapXmlParser.parse();
-        ElementNode rootNode = eapXmlParser.getRootNode();
+        mergeInputPomAndEapXml(path);
 
 
 
@@ -103,4 +106,41 @@ public class Tool {
         return eapXmlPath;
     }
 
+    private void mergeInputPomAndEapXml(Path eapXmlPath) throws XMLStreamException, IOException {
+        // Parse this, so we
+        // - can easily get rid of the root element
+        // - have some kind of structure in case we need to validate/enhance entries
+        EapXmlParser eapXmlParser = new EapXmlParser(eapXmlPath);
+        eapXmlParser.parse();
+
+        // Parse the pon
+        PomParser pomParser = new PomParser(environment.getInputPomLocation());
+        pomParser.parse();
+
+        // Add the eap.xml contents to the pom
+        ProcessingInstructionNode mavenPluginConfigPlaceholder = pomParser.getMavenPluginConfigPlaceholder();
+        if (mavenPluginConfigPlaceholder == null) {
+            throw new IllegalStateException(environment.getInputPomLocation() + " is missing the <?" + PomParser.MAVEN_PLUGIN_CONFIG_PI + "?> procesing instruction");
+        }
+        for (Node node : eapXmlParser.getRootNode().getChildren()) {
+             mavenPluginConfigPlaceholder.addDelegate(node, true);
+        }
+
+        // Write the updated pom
+        FormattingXMLStreamWriter writer =
+                new FormattingXMLStreamWriter(
+                        XMLOutputFactory.newInstance().createXMLStreamWriter(
+                                new BufferedWriter(
+                                        new FileWriter(environment.getCreatedPomLocation().toFile()))));
+        try {
+            writer.writeStartDocument();
+            pomParser.getRootNode().marshall(writer);
+            writer.writeEndDocument();
+        } finally {
+            try {
+                writer.close();
+            } catch (Exception ignore) {
+            }
+        }
+    }
 }
