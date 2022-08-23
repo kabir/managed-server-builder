@@ -29,8 +29,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Environment implements AutoCloseable {
-    static final String EAP_XML_FILE_NAME = "eap.xml";
-    static final String EAP_XML_PATH = "META-INF/" + EAP_XML_FILE_NAME;
+    static final String SERVER_CONFIG_FILE_NAME = "server-config.xml";
+    static final String SERVER_CONFIG_PATH = "META-INF/" + SERVER_CONFIG_FILE_NAME;
 
     private static final Entry WAR_LOCATION =
             new Entry(true,

@@ -1,7 +1,7 @@
 General
+=======
 * Add CLI files in known location in the jar
 * Schema for the xml
-* Use processing instruction in the pom.xml to be replaced with the eap.xml contents
 * Better selection of the base image
 -- In real life for OpenShift we probably want to use the latest
 -- But I need to be able to use the multiarch one
@@ -12,6 +12,7 @@ General
 
 
 Docker image
+============
 * Needs the tool jar, and the server-image-builder, which is just the pom.xml
 - Run the tool to update the pom.xml
 - Run the maven build to provision the server and create the image
@@ -21,3 +22,8 @@ Docker image
 * Metrics about how it is running - we need to know who is using what
 -- Where is this stored?
 * YAML as an alternative to CLI configuration
+
+
+Done
+====
+* Use processing instruction in the pom.xml to be replaced with the eap.xml contents

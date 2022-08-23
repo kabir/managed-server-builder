@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<eap>
+<server-config>
     <record-provisioning-state>true</record-provisioning-state>
     <feature-packs>
         <feature-pack>
@@ -15,5 +15,5 @@
     <galleon-options>
         <jboss-fork-embedded>${plugin.fork.embedded}</jboss-fork-embedded>
     </galleon-options>
-</eap>
+</server-config>
 

@@ -18,8 +18,7 @@
 
 package org.wildfly.managed.server.builder.tool;
 
-import org.wildfly.managed.server.builder.tool.parser.EapXmlParser;
-import org.wildfly.managed.server.builder.tool.parser.ElementNode;
+import org.wildfly.managed.server.builder.tool.parser.ServerConfigParser;
 import org.wildfly.managed.server.builder.tool.parser.FormattingXMLStreamWriter;
 import org.wildfly.managed.server.builder.tool.parser.Node;
 import org.wildfly.managed.server.builder.tool.parser.PomParser;
@@ -49,9 +48,9 @@ public class Tool {
 
     void prepareDeployment() throws Exception {
         copyDeploymentToServerImageBuilder();
-        Path path = getEapXmlContentsFromDeployment();
+        Path path = getServerConfigXmlContentsFromDeployment();
 
-        mergeInputPomAndEapXml(path);
+        mergeInputPomAndServerConfigXml(path);
 
 
 
@@ -73,9 +72,9 @@ public class Tool {
         }
     }
 
-    private Path getEapXmlContentsFromDeployment() throws IOException {
+    private Path getServerConfigXmlContentsFromDeployment() throws IOException {
         boolean found = false;
-        Path eapXmlPath = environment.getServerImageBuilderLocation().resolve(Environment.EAP_XML_FILE_NAME);
+        Path serverConfigXmlPath = environment.getServerImageBuilderLocation().resolve(Environment.SERVER_CONFIG_FILE_NAME);
         try (ZipInputStream zin =
                      new ZipInputStream(
                              new BufferedInputStream(
@@ -84,9 +83,9 @@ public class Tool {
             ZipEntry entry = zin.getNextEntry();
             while (entry != null) {
                 try {
-                    if (entry.getName().endsWith(Environment.EAP_XML_PATH)) {
+                    if (entry.getName().endsWith(Environment.SERVER_CONFIG_PATH)) {
                         found = true;
-                        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(eapXmlPath.toFile()))) {
+                        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(serverConfigXmlPath.toFile()))) {
                             byte[] buffer = new byte[8192];
                             int len;
                             while ((len = zin.read(buffer)) > 0) {
@@ -101,28 +100,28 @@ public class Tool {
             }
         }
         if (!found) {
-            throw new IllegalStateException("The deployment does not contain a " + Environment.EAP_XML_PATH + " file");
+            throw new IllegalStateException("The deployment does not contain a " + Environment.SERVER_CONFIG_PATH + " file");
         }
-        return eapXmlPath;
+        return serverConfigXmlPath;
     }
 
-    private void mergeInputPomAndEapXml(Path eapXmlPath) throws XMLStreamException, IOException {
+    private void mergeInputPomAndServerConfigXml(Path serverConfigXmlPath) throws XMLStreamException, IOException {
         // Parse this, so we
         // - can easily get rid of the root element
         // - have some kind of structure in case we need to validate/enhance entries
-        EapXmlParser eapXmlParser = new EapXmlParser(eapXmlPath);
-        eapXmlParser.parse();
+        ServerConfigParser serverConfigXmlParser = new ServerConfigParser(serverConfigXmlPath);
+        serverConfigXmlParser.parse();
 
         // Parse the pon
         PomParser pomParser = new PomParser(environment.getInputPomLocation());
         pomParser.parse();
 
-        // Add the eap.xml contents to the pom
+        // Add the server-config.xml contents to the pom
         ProcessingInstructionNode mavenPluginConfigPlaceholder = pomParser.getMavenPluginConfigPlaceholder();
         if (mavenPluginConfigPlaceholder == null) {
             throw new IllegalStateException(environment.getInputPomLocation() + " is missing the <?" + PomParser.MAVEN_PLUGIN_CONFIG_PI + "?> procesing instruction");
         }
-        for (Node node : eapXmlParser.getRootNode().getChildren()) {
+        for (Node node : serverConfigXmlParser.getRootNode().getChildren()) {
              mavenPluginConfigPlaceholder.addDelegate(node, true);
         }
 

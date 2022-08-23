@@ -25,7 +25,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.Map;
 
 import static javax.xml.stream.XMLStreamConstants.START_DOCUMENT;
 
@@ -33,12 +32,12 @@ import static javax.xml.stream.XMLStreamConstants.START_DOCUMENT;
  *
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  */
-public class EapXmlParser extends NodeParser {
-    private static final String ROOT_ELEMENT_NAME = "eap";
+public class ServerConfigParser extends NodeParser {
+    private static final String ROOT_ELEMENT_NAME = "server-config";
     private final Path inputFile;
     private ElementNode root;
 
-    public EapXmlParser(Path inputFile) {
+    public ServerConfigParser(Path inputFile) {
         this.inputFile = inputFile;
     }
 
