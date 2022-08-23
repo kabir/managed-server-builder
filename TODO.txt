@@ -1,0 +1,19 @@
+General
+* Add CLI files in known location in the jar
+* Schema for the xml
+* Use processing instruction in the pom.xml to be replaced with the eap.xml contents
+* Better selection of the base image
+-- In real life for OpenShift we probably want to use the latest
+-- But I need to be able to use the multiarch one
+-- Also we probably want some kind of 'staging' for upcoming images
+* I don't think the user should need to specify the WildFly version. Rather that is the job of the managed service to use the latest.
+-- Same for the other feature packs we ship?
+-- What about user feature packs. Is that something we will support?
+
+
+Docker image
+* Needs the tool jar, and the server-image-builder, which is just the pom.xml
+- Run the tool to update the pom.xml
+- Run the maven build to provision the server and create the image
+* How to name the image?
+* Once built where should it be pushed to?
