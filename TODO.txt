@@ -1,6 +1,5 @@
 General
 =======
-* Add CLI files in known location in the jar
 * Schema for the xml
 * Better selection of the base image
 -- In real life for OpenShift we probably want to use the latest
@@ -19,11 +18,15 @@ Docker image
 * How to name the image?
 * Once built where should it be pushed to?
 
+Later
+======
 * Metrics about how it is running - we need to know who is using what
 -- Where is this stored?
 * YAML as an alternative to CLI configuration
+-- Needs some jboss modules trickery to turn on https://github.com/wildfly-extras/wildfly-jar-maven-plugin/compare/main...jfdenise:wildfly-jar-maven-plugin:yaml-support-example?expand=1#diff-7d593ff5de5e4039445d759b42d5e2a8b342a91a71acb33b05d63dfdf8ba8ade
 
 
 Done
 ====
 * Use processing instruction in the pom.xml to be replaced with the eap.xml contents
+* Add CLI files in known location in the jar

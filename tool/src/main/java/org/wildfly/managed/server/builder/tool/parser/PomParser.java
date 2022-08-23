@@ -25,7 +25,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static javax.xml.stream.XMLStreamConstants.START_DOCUMENT;
 
@@ -36,12 +38,15 @@ import static javax.xml.stream.XMLStreamConstants.START_DOCUMENT;
 public class PomParser extends NodeParser {
     public static final String MAVEN_PLUGIN_CONFIG_PI = "MAVEN_PLUGIN_CONFIG";
     public static final String DOCKER_COPY_CLI_PI = "COPY_CLI";
+    public static final String CLI_SCRIPT_ENV_VAR_PI = "CLI_SCRIPT_ENV_VAR";
     private static final String ROOT_ELEMENT_NAME = "project";
+
     private final Path inputFile;
     private ElementNode root;
 
     private ProcessingInstructionNode mavenPluginConfigPlaceholder;
     private ProcessingInstructionNode dockerCopyCliPlaceholder;
+    private ProcessingInstructionNode cliScriptEnvVarPlaceholder;
 
     public PomParser(Path inputFile) {
         this.inputFile = inputFile;
@@ -59,6 +64,10 @@ public class PomParser extends NodeParser {
         return dockerCopyCliPlaceholder;
     }
 
+    public ProcessingInstructionNode getCliScriptEnvVarPlaceholder() {
+        return cliScriptEnvVarPlaceholder;
+    }
+
     public void parse() throws IOException, XMLStreamException {
         InputStream in = new BufferedInputStream(new FileInputStream(inputFile.toFile()));
         try {
@@ -70,6 +79,7 @@ public class PomParser extends NodeParser {
             ParsingUtils.getNextElement(reader, ROOT_ELEMENT_NAME, null, false);
             root = super.parseNode(reader, ROOT_ELEMENT_NAME);
 
+            validateAllProcessingInstructionsExist();
         } finally {
             try {
                 in.close();
@@ -78,6 +88,26 @@ public class PomParser extends NodeParser {
         }
     }
 
+    private void validateAllProcessingInstructionsExist() {
+        Set<String> missing = new HashSet<>();
+        if (mavenPluginConfigPlaceholder == null) {
+            missing.add(toProcessingInstruction(MAVEN_PLUGIN_CONFIG_PI));
+        }
+        if (cliScriptEnvVarPlaceholder == null) {
+            missing.add(toProcessingInstruction(CLI_SCRIPT_ENV_VAR_PI));
+        }
+        if (dockerCopyCliPlaceholder == null) {
+            missing.add(toProcessingInstruction(DOCKER_COPY_CLI_PI));
+        }
+
+        if (missing.size() > 0) {
+            throw new IllegalStateException("The input pom is missing the following processing instructions: " + missing);
+        }
+    }
+
+    private String toProcessingInstruction(String name) {
+        return "<?" + name + "?>";
+    }
 
     @Override
     protected ProcessingInstructionNode parseProcessingInstruction(XMLStreamReader reader, ElementNode parent) throws XMLStreamException {
@@ -90,8 +120,11 @@ public class PomParser extends NodeParser {
         } else if (pi.equals(DOCKER_COPY_CLI_PI)) {
             node = createProcessingInstruction(data, parent, pi, dockerCopyCliPlaceholder);
             dockerCopyCliPlaceholder = node;
+        } else if (pi.equals(CLI_SCRIPT_ENV_VAR_PI)) {
+            node = createProcessingInstruction(data, parent, pi, cliScriptEnvVarPlaceholder);
+            cliScriptEnvVarPlaceholder = node;
         } else {
-            throw new IllegalStateException("Unknown processing instruction <?" + reader.getPITarget() + "?>" + reader.getLocation());
+            throw new IllegalStateException("Unknown processing instruction " + toProcessingInstruction(reader.getPITarget()) + " " + reader.getLocation());
         }
         return node;
     }
@@ -99,10 +132,10 @@ public class PomParser extends NodeParser {
     private ProcessingInstructionNode createProcessingInstruction(
             Map<String, String> data, ElementNode parent, String processingInstructionName, ProcessingInstructionNode existing) {
         if (!data.isEmpty()) {
-            throw new IllegalStateException("<?" + processingInstructionName + "?> should not take any data");
+            throw new IllegalStateException(toProcessingInstruction(processingInstructionName) + " should not take any data");
         }
         if (existing != null) {
-            throw new IllegalStateException("Can only have one occurance of <?" + processingInstructionName + "?>");
+            throw new IllegalStateException("Can only have one occurance of " + toProcessingInstruction(processingInstructionName));
         }
         return new ProcessingInstructionNode(parent, processingInstructionName, null);
     }

@@ -19,11 +19,13 @@
 package org.wildfly.managed.server.builder.tool;
 
 import org.wildfly.managed.server.builder.tool.parser.DockerCopyInitCliParser;
+import org.wildfly.managed.server.builder.tool.parser.ElementNode;
 import org.wildfly.managed.server.builder.tool.parser.ServerConfigParser;
 import org.wildfly.managed.server.builder.tool.parser.FormattingXMLStreamWriter;
 import org.wildfly.managed.server.builder.tool.parser.Node;
 import org.wildfly.managed.server.builder.tool.parser.PomParser;
 import org.wildfly.managed.server.builder.tool.parser.ProcessingInstructionNode;
+import org.wildfly.managed.server.builder.tool.parser.TextNode;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -136,22 +138,24 @@ public class Tool {
 
         // Add the server-config.xml contents to the pom
         ProcessingInstructionNode mavenPluginConfigPlaceholder = pomParser.getMavenPluginConfigPlaceholder();
-        if (mavenPluginConfigPlaceholder == null) {
-            throw new IllegalStateException(environment.getInputPomLocation() + " is missing the <?" + PomParser.MAVEN_PLUGIN_CONFIG_PI + "?> procesing instruction");
-        }
         for (Node node : serverConfigXmlParser.getRootNode().getChildren()) {
              mavenPluginConfigPlaceholder.addDelegate(node, true);
         }
 
-        // If there was a server-init.cli, add instructions to copy it
+        // If there was a server-init.cli, add instructions to enable it
         if (Files.exists(serverInitCliPath)) {
+            // Add the server-init.cli to the docker image
             ProcessingInstructionNode dockerCopyCliPlaceholder = pomParser.getDockerCopyCliPlaceholder();
-            if (mavenPluginConfigPlaceholder == null) {
-                throw new IllegalStateException(environment.getInputPomLocation() + " is missing the <?" + PomParser.DOCKER_COPY_CLI_PI + "?> procesing instruction");
-            }
             DockerCopyInitCliParser dockerCopyInitCliParser = new DockerCopyInitCliParser(environment.getInputCopyInitCliLocation());
             dockerCopyInitCliParser.parse();
             dockerCopyCliPlaceholder.addDelegate(dockerCopyInitCliParser.getRootNode(), true);
+
+            // Set the environment variable to trigger the cli script
+            ProcessingInstructionNode cliScriptEnvVarPlaceholder = pomParser.getCliScriptEnvVarPlaceholder();
+            ElementNode node = new ElementNode(dockerCopyInitCliParser.getRootNode(), "CLI_LAUNCH_SCRIPT");
+            // input-copy-init-cli.xml has the cli file in the root of the server
+            node.addChild(new TextNode("server-init.cli"));
+            cliScriptEnvVarPlaceholder.addDelegate(node, true);
         }
 
 

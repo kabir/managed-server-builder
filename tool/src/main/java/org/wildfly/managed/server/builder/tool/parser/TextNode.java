@@ -24,11 +24,11 @@ import javax.xml.stream.XMLStreamWriter;
  *
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  */
-class TextNode extends Node {
+public class TextNode extends Node {
 
     private final String text;
 
-    TextNode(final String text){
+    public TextNode(final String text){
         this.text = text;
     }
 

@@ -104,7 +104,7 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                                     <build>
                                         <from>${image.name.wildfly.runtime}</from>
                                         <env>
-                                            <!--<?CLI_SCRIPT_ENV_VAR?>-->
+                                            <?CLI_SCRIPT_ENV_VAR?>
                                         </env>
                                         <assemblies>
                                             <assembly>\

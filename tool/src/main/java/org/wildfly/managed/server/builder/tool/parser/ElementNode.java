@@ -40,7 +40,7 @@ public class ElementNode extends Node {
     private final Map<String, AttributeValue> attributes = new LinkedHashMap<String, AttributeValue>();
     private List<Node> children = new ArrayList<Node>();
 
-    ElementNode(final ElementNode parent, final String name) {
+    public ElementNode(final ElementNode parent, final String name) {
         this(parent, name, parent.getNamespace());
     }
 
