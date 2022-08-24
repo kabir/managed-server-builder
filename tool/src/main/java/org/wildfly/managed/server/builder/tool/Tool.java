@@ -18,7 +18,6 @@
 
 package org.wildfly.managed.server.builder.tool;
 
-import org.wildfly.managed.server.builder.tool.parser.DockerCopyInitCliParser;
 import org.wildfly.managed.server.builder.tool.parser.ElementNode;
 import org.wildfly.managed.server.builder.tool.parser.ServerConfigParser;
 import org.wildfly.managed.server.builder.tool.parser.FormattingXMLStreamWriter;
@@ -45,13 +44,9 @@ import java.util.zip.ZipInputStream;
 
 public class Tool {
     private final Environment environment;
-    Path serverConfigXmlPath;
-    Path serverInitCliPath;
 
     public Tool(Environment environment) {
         this.environment = environment;
-        serverConfigXmlPath = environment.getServerImageBuilderLocation().resolve(Environment.SERVER_CONFIG_FILE_NAME);
-        serverInitCliPath = environment.getServerImageBuilderLocation().resolve(Environment.SERVER_INIT_FILE_NAME);
     }
 
     void prepareDeployment() throws Exception {
@@ -59,9 +54,6 @@ public class Tool {
         getServerConfigXmlContentsFromDeployment();
 
         mergeInputPomAndServerConfigXml();
-
-
-
     }
 
     private void copyDeploymentToServerImageBuilder() throws IOException {
@@ -96,13 +88,13 @@ public class Tool {
                             throw new IllegalStateException("The archive contains duplicate " + Environment.SERVER_CONFIG_FILE_NAME + " files");
                         }
                         foundServerConfigXml = true;
-                        extractCurrentFile(zin, serverConfigXmlPath);
+                        extractCurrentFile(zin, environment.getServerConfigXmlPath());
                     } else if (entry.getName().equals(Environment.SERVER_INIT_JAR_LOCATION_A) || entry.getName().equals(Environment.SERVER_INIT_JAR_LOCATION_B)) {
                         if (foundServerInitCli) {
                             throw new IllegalStateException("The archive contains duplicate " + Environment.SERVER_INIT_FILE_NAME + " files");
                         }
                         foundServerInitCli = true;
-                        extractCurrentFile(zin, serverInitCliPath);
+                        extractCurrentFile(zin, environment.getServerInitCliPath());
                     }
                 } finally {
                     zin.closeEntry();
@@ -129,7 +121,7 @@ public class Tool {
         // Parse this, so we
         // - can easily get rid of the root element
         // - have some kind of structure in case we need to validate/enhance entries
-        ServerConfigParser serverConfigXmlParser = new ServerConfigParser(serverConfigXmlPath);
+        ServerConfigParser serverConfigXmlParser = new ServerConfigParser(environment.getServerConfigXmlPath());
         serverConfigXmlParser.parse();
 
         // Parse the pom
@@ -143,17 +135,11 @@ public class Tool {
         }
 
         // If there was a server-init.cli, add instructions to enable it
-        if (Files.exists(serverInitCliPath)) {
-            // Add the server-init.cli to the docker image
-            ProcessingInstructionNode dockerCopyCliPlaceholder = pomParser.getDockerCopyCliPlaceholder();
-            DockerCopyInitCliParser dockerCopyInitCliParser = new DockerCopyInitCliParser(environment.getInputCopyInitCliLocation());
-            dockerCopyInitCliParser.parse();
-            dockerCopyCliPlaceholder.addDelegate(dockerCopyInitCliParser.getRootNode(), true);
-
-            // Set the environment variable to trigger the cli script
+        if (Files.exists(environment.getServerInitCliPath())) {
+            // Set the environment variable to trigger the cli script. The server-image-builder pom will put it
+            // in the root of the server
             ProcessingInstructionNode cliScriptEnvVarPlaceholder = pomParser.getCliScriptEnvVarPlaceholder();
-            ElementNode node = new ElementNode(dockerCopyInitCliParser.getRootNode(), "CLI_LAUNCH_SCRIPT");
-            // input-copy-init-cli.xml has the cli file in the root of the server
+            ElementNode node = new ElementNode(cliScriptEnvVarPlaceholder.getParent(), "CLI_LAUNCH_SCRIPT");
             node.addChild(new TextNode("server-init.cli"));
             cliScriptEnvVarPlaceholder.addDelegate(node, true);
         }

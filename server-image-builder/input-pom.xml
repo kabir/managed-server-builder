@@ -53,11 +53,29 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.wildfly.plugins</groupId>
+                    <artifactId>wildfly-maven-plugin</artifactId>
+                    <version>${version.org.wildfly.plugins.wildfly-maven-plugin}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${version.org.apache.maven.plugins.maven-resource-plugin}</version>
+                </plugin>
+                <plugin>
+                    <groupId>io.fabric8</groupId>
+                    <artifactId>docker-maven-plugin</artifactId>
+                    <version>${version.io.fabric8.docker-maven-plugin}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
-                <version>${version.org.wildfly.plugins.wildfly-maven-plugin}</version>
                 <configuration>
                     <?MAVEN_PLUGIN_CONFIG?>
                 </configuration>
@@ -74,7 +92,6 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>${version.org.apache.maven.plugins.maven-resource-plugin}</version>
                 <executions>
                     <execution>
                         <id>copy-deployment</id>
@@ -86,7 +103,7 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                             <outputDirectory>target/server/standalone/deployments</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>.</directory>
+                                    <directory>files</directory>
                                     <includes>
                                         <include>ROOT.war</include>
                                     </includes>
@@ -99,7 +116,6 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
             <plugin>
                 <groupId>io.fabric8</groupId>
                 <artifactId>docker-maven-plugin</artifactId>
-                <version>${version.io.fabric8.docker-maven-plugin}</version>
                 <executions>
                     <execution>
                         <id>build-server</id>
@@ -118,7 +134,7 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                                             <?CLI_SCRIPT_ENV_VAR?>
                                         </env>
                                         <assemblies>
-                                            <assembly>\
+                                            <assembly>
                                                 <name>copy-server</name>
                                                 <mode>dir</mode>
                                                 <user>jboss:root</user>
@@ -138,8 +154,6 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                                                     </fileSets>
                                                 </inline>
                                             </assembly>
-                                            <!-- Replaced with contents of input-copy-init-cli.xml if required -->
-                                            <?COPY_CLI?>
                                         </assemblies>
                                     </build>
                                 </image>
@@ -150,4 +164,46 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <!--
+                Copies across the server-init.cli extracted from the deployment if there was one.
+                The tool will set an env var in the image if this was present.
+            -->
+            <id>copy-init-cli-if-exist</id>
+            <activation>
+                <file>
+                    <exists>files/server-init.cli</exists>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-server-init.cli</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>target/server/</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>files</directory>
+                                            <includes>
+                                                <include>server-init.cli</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

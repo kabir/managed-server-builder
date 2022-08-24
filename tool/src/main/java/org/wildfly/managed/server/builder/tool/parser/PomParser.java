@@ -37,7 +37,6 @@ import static javax.xml.stream.XMLStreamConstants.START_DOCUMENT;
  */
 public class PomParser extends NodeParser {
     public static final String MAVEN_PLUGIN_CONFIG_PI = "MAVEN_PLUGIN_CONFIG";
-    public static final String DOCKER_COPY_CLI_PI = "COPY_CLI";
     public static final String CLI_SCRIPT_ENV_VAR_PI = "CLI_SCRIPT_ENV_VAR";
     private static final String ROOT_ELEMENT_NAME = "project";
 
@@ -96,9 +95,6 @@ public class PomParser extends NodeParser {
         if (cliScriptEnvVarPlaceholder == null) {
             missing.add(toProcessingInstruction(CLI_SCRIPT_ENV_VAR_PI));
         }
-        if (dockerCopyCliPlaceholder == null) {
-            missing.add(toProcessingInstruction(DOCKER_COPY_CLI_PI));
-        }
 
         if (missing.size() > 0) {
             throw new IllegalStateException("The input pom is missing the following processing instructions: " + missing);
@@ -117,9 +113,6 @@ public class PomParser extends NodeParser {
         if (pi.equals(MAVEN_PLUGIN_CONFIG_PI)) {
             node = createProcessingInstruction(data, parent, pi, mavenPluginConfigPlaceholder);
             mavenPluginConfigPlaceholder = node;
-        } else if (pi.equals(DOCKER_COPY_CLI_PI)) {
-            node = createProcessingInstruction(data, parent, pi, dockerCopyCliPlaceholder);
-            dockerCopyCliPlaceholder = node;
         } else if (pi.equals(CLI_SCRIPT_ENV_VAR_PI)) {
             node = createProcessingInstruction(data, parent, pi, cliScriptEnvVarPlaceholder);
             cliScriptEnvVarPlaceholder = node;

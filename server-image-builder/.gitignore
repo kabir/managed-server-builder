@@ -1,5 +1,4 @@
 # These files are generated/copied in when doing local testing
 # So don't commit these
-server-config.xml
-ROOT.war
 pom.xml
+files/

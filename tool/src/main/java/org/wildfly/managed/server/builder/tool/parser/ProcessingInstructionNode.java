@@ -53,6 +53,10 @@ public class ProcessingInstructionNode extends Node {
         }
     }
 
+    public ElementNode getParent() {
+        return parent;
+    }
+
     String getDataValue(String name, String defaultValue) {
         if (data != null) {
             String s = data.get(name);

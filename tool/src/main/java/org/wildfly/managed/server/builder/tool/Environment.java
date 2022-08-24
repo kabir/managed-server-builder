@@ -53,31 +53,31 @@ public class Environment implements AutoCloseable {
     private final Path serverImageDeploymentLocation;
     private final Path inputPomLocation;
     private final Path createdPomLocation;
-    private final Path inputCopyInitCliLocation;
+    private final Path serverConfigXmlPath;
+    private final Path serverInitCliPath;
 
-    public Environment(InputStream warInputStream, Path serverImageBuilderLocation) {
+    public Environment(InputStream warInputStream, Path serverImageBuilderLocation) throws IOException {
         this.warInputStream = warInputStream;
         this.serverImageBuilderLocation = serverImageBuilderLocation;
-        this.serverImageDeploymentLocation = serverImageBuilderLocation.resolve("ROOT.war");
+        Path serverBuilderFilesLocation = serverImageBuilderLocation.resolve("files");
+        if (!Files.exists(serverBuilderFilesLocation)) {
+            Files.createDirectories(serverBuilderFilesLocation);
+        }
         inputPomLocation = serverImageBuilderLocation.resolve("input-pom.xml");
         createdPomLocation = serverImageBuilderLocation.resolve("pom.xml");
-        inputCopyInitCliLocation = serverImageBuilderLocation.resolve("input-copy-init-cli.xml");
+
+        // Files to be extracted from the deployment
+        serverImageDeploymentLocation = serverBuilderFilesLocation.resolve("ROOT.war");
+        serverConfigXmlPath = serverBuilderFilesLocation.resolve(Environment.SERVER_CONFIG_FILE_NAME);
+        serverInitCliPath = serverBuilderFilesLocation.resolve(Environment.SERVER_INIT_FILE_NAME);
     }
 
     public InputStream getWarInputStream() {
         return warInputStream;
     }
 
-    public Path getServerImageBuilderLocation() {
-        return serverImageBuilderLocation;
-    }
-
     public Path getServerImageDeploymentLocation() {
         return serverImageDeploymentLocation;
-    }
-
-    public Path getInputCopyInitCliLocation() {
-        return inputCopyInitCliLocation;
     }
 
     public Path getInputPomLocation() {
@@ -86,6 +86,14 @@ public class Environment implements AutoCloseable {
 
     public Path getCreatedPomLocation() {
         return createdPomLocation;
+    }
+
+    public Path getServerConfigXmlPath() {
+        return serverConfigXmlPath;
+    }
+
+    public Path getServerInitCliPath() {
+        return serverInitCliPath;
     }
 
     @Override
