@@ -51,6 +51,9 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
         <!-- Misc. -->
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+
+        <!-- 'Constants' -->
+        <server.config.init.dir>target/server/standalone/configuration/init</server.config.init.dir>
     </properties>
     <build>
         <pluginManagement>
@@ -131,7 +134,7 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                                     <build>
                                         <from>${image.name.wildfly.runtime}</from>
                                         <env>
-                                            <?CLI_SCRIPT_ENV_VAR?>
+                                            <?DOCKER_PLUGIN_ENV_VARS?>
                                         </env>
                                         <assemblies>
                                             <assembly>
@@ -170,7 +173,7 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                 Copies across the server-init.cli extracted from the deployment if there was one.
                 The tool will set an env var in the image if this was present.
             -->
-            <id>copy-init-cli-if-exist</id>
+            <id>copy-init-cli-if-exists</id>
             <activation>
                 <file>
                     <exists>files/server-init.cli</exists>
@@ -189,12 +192,69 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                                     <goal>copy-resources</goal>
                                 </goals>
                                 <configuration>
-                                    <outputDirectory>target/server/</outputDirectory>
+                                    <outputDirectory>${server.config.init.dir}</outputDirectory>
                                     <resources>
                                         <resource>
                                             <directory>files</directory>
                                             <includes>
                                                 <include>server-init.cli</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!--
+                Copies across the server-init.yml extracted from the deployment if there was one.
+            -->
+            <id>copy-init-yml-if-exists</id>
+            <activation>
+                <file>
+                    <exists>files/server-init.yml</exists>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-server-init.yml</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${server.config.init.dir}</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>files</directory>
+                                            <includes>
+                                                <include>server-init.yml</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>copy-yaml-service-loader.yml</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>target/server/modules/system/layers/base/org/jboss/as/controller/main/dir/META-INF/services/</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>files</directory>
+                                            <includes>
+                                                <include>org.jboss.as.controller.persistence.ConfigurationExtension</include>
                                             </includes>
                                         </resource>
                                     </resources>

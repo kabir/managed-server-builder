@@ -39,6 +39,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -75,6 +79,7 @@ public class Tool {
     private void getServerConfigXmlContentsFromDeployment() throws IOException {
         boolean foundServerConfigXml = false;
         boolean foundServerInitCli = false;
+        boolean foundServerInitYml = false;
         try (ZipInputStream zin =
                      new ZipInputStream(
                              new BufferedInputStream(
@@ -83,18 +88,24 @@ public class Tool {
             ZipEntry entry = zin.getNextEntry();
             while (entry != null) {
                 try {
-                    if (entry.getName().equals(Environment.SERVER_CONFIG_JAR_LOCATION_A) || entry.getName().equals(Environment.SERVER_CONFIG_JAR_LOCATION_B)) {
+                    if (isMetaInfFile(entry.getName(), Environment.SERVER_CONFIG_FILE_NAME)) {
                         if (foundServerConfigXml) {
                             throw new IllegalStateException("The archive contains duplicate " + Environment.SERVER_CONFIG_FILE_NAME + " files");
                         }
                         foundServerConfigXml = true;
                         extractCurrentFile(zin, environment.getServerConfigXmlPath());
-                    } else if (entry.getName().equals(Environment.SERVER_INIT_JAR_LOCATION_A) || entry.getName().equals(Environment.SERVER_INIT_JAR_LOCATION_B)) {
+                    } else if (isMetaInfFile(entry.getName(), Environment.SERVER_INIT_CLI_FILE_NAME)) {
                         if (foundServerInitCli) {
-                            throw new IllegalStateException("The archive contains duplicate " + Environment.SERVER_INIT_FILE_NAME + " files");
+                            throw new IllegalStateException("The archive contains duplicate " + Environment.SERVER_INIT_CLI_FILE_NAME + " files");
                         }
                         foundServerInitCli = true;
                         extractCurrentFile(zin, environment.getServerInitCliPath());
+                    } else if (isMetaInfFile(entry.getName(), Environment.SERVER_INIT_YML_FILE_NAME)) {
+                        if (foundServerInitYml) {
+                            throw new IllegalStateException("The archive contains duplicate " + Environment.SERVER_INIT_YML_FILE_NAME + " files");
+                        }
+                        foundServerInitYml = true;
+                        extractCurrentFile(zin, environment.getServerInitYmlPath());
                     }
                 } finally {
                     zin.closeEntry();
@@ -103,8 +114,15 @@ public class Tool {
             }
         }
         if (!foundServerConfigXml) {
-            throw new IllegalStateException("The deployment does not contain a " + Environment.SERVER_CONFIG_JAR_LOCATION_A + " file");
+            throw new IllegalStateException("The deployment does not contain a " + Environment.SERVER_CONFIG_FILE_NAME + " file");
         }
+    }
+
+    private boolean isMetaInfFile(String jarEntryName, String filename) {
+        if (jarEntryName.endsWith(filename)) {
+            return jarEntryName.equals("WEB-INF/classes/META-INF/" + filename) || jarEntryName.equals("META-INF/" + filename);
+        }
+        return false;
     }
 
     private void extractCurrentFile(ZipInputStream zin, Path path) throws IOException {
@@ -118,6 +136,9 @@ public class Tool {
     }
 
     private void mergeInputPomAndServerConfigXml() throws XMLStreamException, IOException {
+        Map<String, String> environmentVariables = new HashMap<>();
+        List<String> commandLineArguments = new LinkedList<>();
+
         // Parse this, so we
         // - can easily get rid of the root element
         // - have some kind of structure in case we need to validate/enhance entries
@@ -137,13 +158,40 @@ public class Tool {
         // If there was a server-init.cli, add instructions to enable it
         if (Files.exists(environment.getServerInitCliPath())) {
             // Set the environment variable to trigger the cli script. The server-image-builder pom will put it
-            // in the root of the server
-            ProcessingInstructionNode cliScriptEnvVarPlaceholder = pomParser.getCliScriptEnvVarPlaceholder();
-            ElementNode node = new ElementNode(cliScriptEnvVarPlaceholder.getParent(), "CLI_LAUNCH_SCRIPT");
-            node.addChild(new TextNode("server-init.cli"));
-            cliScriptEnvVarPlaceholder.addDelegate(node, true);
+            // under standalone/configuration/init/server-init.cli. The CLI_LAUNCH_SCRIPT env var
+            // is relative to the root of the server
+            environmentVariables.put("CLI_LAUNCH_SCRIPT", "standalone/configuration/init/server-init.cli");
         }
 
+        // If there was a server-init.yml, add instructions to enable it
+        if (Files.exists(environment.getServerInitYmlPath())) {
+            // The server-image-builder pom will put the yaml file in the root of the server
+            // We need to add some extra information to one of the modules via a service loader to enable the mechanism.
+            // We create the file here, and let the service-image-builder pom copy it across for us to
+            // standalone/configuration/init/server-init.yml
+            Files.writeString(environment.getServerInitYmlServiceLoaderPath(), Environment.SERVER_INIT_YML_SERVICE_LOADER_CONTENTS);
+
+            // Add `--yaml init/server-init.yml` as a command-line argument when starting the server. The file is
+            // relative to the standalone/configuration folder
+            commandLineArguments.add("--yaml init/server-init.yml");
+        }
+
+        if (commandLineArguments.size() > 0) {
+            StringBuilder sb = new StringBuilder();
+            for (String arg : commandLineArguments) {
+                sb.append(" ");
+                sb.append(arg);
+            }
+            environmentVariables.put("SERVER_ARGS", sb.toString());
+        }
+
+        // Set the collected environment variables in the pom
+        ProcessingInstructionNode dockerPluginEnvVarsPlaceholder = pomParser.getDockerPluginEnvVarsPlaceholder();
+        for (Map.Entry<String, String> entry : environmentVariables.entrySet()) {
+            ElementNode node = new ElementNode(dockerPluginEnvVarsPlaceholder.getParent(), entry.getKey());
+            node.addChild(new TextNode(entry.getValue()));
+            dockerPluginEnvVarsPlaceholder.addDelegate(node, true);
+        }
 
         // Write the updated pom
         FormattingXMLStreamWriter writer =

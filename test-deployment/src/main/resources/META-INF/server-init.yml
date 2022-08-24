@@ -1,0 +1,4 @@
+wildfly-configuration:
+  system-property:
+    testing2:
+      value: 456

@@ -29,14 +29,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Environment implements AutoCloseable {
+
+
     static final String SERVER_CONFIG_FILE_NAME = "server-config.xml";
-    // Where to look for the server-config.xml in the archive
-    static final String SERVER_CONFIG_JAR_LOCATION_A = "META-INF/" + SERVER_CONFIG_FILE_NAME;
-    static final String SERVER_CONFIG_JAR_LOCATION_B = "WEB-INF/classes/META-INF/" + SERVER_CONFIG_FILE_NAME;
+
     // Where to look for the server-init.cli in the archive
-    static final String SERVER_INIT_FILE_NAME = "server-init.cli";
-    static final String SERVER_INIT_JAR_LOCATION_A = "META-INF/" + SERVER_INIT_FILE_NAME;
-    static final String SERVER_INIT_JAR_LOCATION_B = "WEB-INF/classes/META-INF/" + SERVER_INIT_FILE_NAME;
+    static final String SERVER_INIT_CLI_FILE_NAME = "server-init.cli";
+
+    // Where to look for the server-init.yml in the archive
+    static final String SERVER_INIT_YML_FILE_NAME = "server-init.yml";
+
+    // Name of the service loader file needed to enable the yaml mechanism
+    static final String SERVER_INIT_YML_SERVICE_LOADER_NAME = "org.jboss.as.controller.persistence.ConfigurationExtension";
+    static final String SERVER_INIT_YML_SERVICE_LOADER_CONTENTS = "org.jboss.as.controller.persistence.yaml.YamlConfigurationExtension";
 
     private static final Entry WAR_LOCATION =
             new Entry(true,
@@ -55,21 +60,26 @@ public class Environment implements AutoCloseable {
     private final Path createdPomLocation;
     private final Path serverConfigXmlPath;
     private final Path serverInitCliPath;
+    private final Path serverInitYmlPath;
+    private final Path serverInitYmlServiceLoaderPath;
 
     public Environment(InputStream warInputStream, Path serverImageBuilderLocation) throws IOException {
         this.warInputStream = warInputStream;
         this.serverImageBuilderLocation = serverImageBuilderLocation;
+        inputPomLocation = serverImageBuilderLocation.resolve("input-pom.xml");
+        createdPomLocation = serverImageBuilderLocation.resolve("pom.xml");
+
+        // The deployment and files to be extracted from it go into the files/ folder of the
+        // server-image-builder
         Path serverBuilderFilesLocation = serverImageBuilderLocation.resolve("files");
         if (!Files.exists(serverBuilderFilesLocation)) {
             Files.createDirectories(serverBuilderFilesLocation);
         }
-        inputPomLocation = serverImageBuilderLocation.resolve("input-pom.xml");
-        createdPomLocation = serverImageBuilderLocation.resolve("pom.xml");
-
-        // Files to be extracted from the deployment
         serverImageDeploymentLocation = serverBuilderFilesLocation.resolve("ROOT.war");
-        serverConfigXmlPath = serverBuilderFilesLocation.resolve(Environment.SERVER_CONFIG_FILE_NAME);
-        serverInitCliPath = serverBuilderFilesLocation.resolve(Environment.SERVER_INIT_FILE_NAME);
+        serverConfigXmlPath = serverBuilderFilesLocation.resolve(SERVER_CONFIG_FILE_NAME);
+        serverInitCliPath = serverBuilderFilesLocation.resolve(SERVER_INIT_CLI_FILE_NAME);
+        serverInitYmlPath = serverBuilderFilesLocation.resolve(SERVER_INIT_YML_FILE_NAME);
+        serverInitYmlServiceLoaderPath = serverBuilderFilesLocation.resolve(SERVER_INIT_YML_SERVICE_LOADER_NAME);
     }
 
     public InputStream getWarInputStream() {
@@ -94,6 +104,14 @@ public class Environment implements AutoCloseable {
 
     public Path getServerInitCliPath() {
         return serverInitCliPath;
+    }
+
+    public Path getServerInitYmlPath() {
+        return serverInitYmlPath;
+    }
+
+    public Path getServerInitYmlServiceLoaderPath() {
+        return serverInitYmlServiceLoaderPath;
     }
 
     @Override

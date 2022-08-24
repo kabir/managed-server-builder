@@ -37,15 +37,14 @@ import static javax.xml.stream.XMLStreamConstants.START_DOCUMENT;
  */
 public class PomParser extends NodeParser {
     public static final String MAVEN_PLUGIN_CONFIG_PI = "MAVEN_PLUGIN_CONFIG";
-    public static final String CLI_SCRIPT_ENV_VAR_PI = "CLI_SCRIPT_ENV_VAR";
+    public static final String DOCKER_PLUGIN_ENV_VAR_PI = "DOCKER_PLUGIN_ENV_VARS";
     private static final String ROOT_ELEMENT_NAME = "project";
 
     private final Path inputFile;
     private ElementNode root;
 
     private ProcessingInstructionNode mavenPluginConfigPlaceholder;
-    private ProcessingInstructionNode dockerCopyCliPlaceholder;
-    private ProcessingInstructionNode cliScriptEnvVarPlaceholder;
+    private ProcessingInstructionNode dockerPluginEnvVarsPlaceholder;
 
     public PomParser(Path inputFile) {
         this.inputFile = inputFile;
@@ -59,12 +58,8 @@ public class PomParser extends NodeParser {
         return mavenPluginConfigPlaceholder;
     }
 
-    public ProcessingInstructionNode getDockerCopyCliPlaceholder() {
-        return dockerCopyCliPlaceholder;
-    }
-
-    public ProcessingInstructionNode getCliScriptEnvVarPlaceholder() {
-        return cliScriptEnvVarPlaceholder;
+    public ProcessingInstructionNode getDockerPluginEnvVarsPlaceholder() {
+        return dockerPluginEnvVarsPlaceholder;
     }
 
     public void parse() throws IOException, XMLStreamException {
@@ -92,8 +87,8 @@ public class PomParser extends NodeParser {
         if (mavenPluginConfigPlaceholder == null) {
             missing.add(toProcessingInstruction(MAVEN_PLUGIN_CONFIG_PI));
         }
-        if (cliScriptEnvVarPlaceholder == null) {
-            missing.add(toProcessingInstruction(CLI_SCRIPT_ENV_VAR_PI));
+        if (dockerPluginEnvVarsPlaceholder == null) {
+            missing.add(toProcessingInstruction(DOCKER_PLUGIN_ENV_VAR_PI));
         }
 
         if (missing.size() > 0) {
@@ -113,9 +108,9 @@ public class PomParser extends NodeParser {
         if (pi.equals(MAVEN_PLUGIN_CONFIG_PI)) {
             node = createProcessingInstruction(data, parent, pi, mavenPluginConfigPlaceholder);
             mavenPluginConfigPlaceholder = node;
-        } else if (pi.equals(CLI_SCRIPT_ENV_VAR_PI)) {
-            node = createProcessingInstruction(data, parent, pi, cliScriptEnvVarPlaceholder);
-            cliScriptEnvVarPlaceholder = node;
+        } else if (pi.equals(DOCKER_PLUGIN_ENV_VAR_PI)) {
+            node = createProcessingInstruction(data, parent, pi, dockerPluginEnvVarsPlaceholder);
+            dockerPluginEnvVarsPlaceholder = node;
         } else {
             throw new IllegalStateException("Unknown processing instruction " + toProcessingInstruction(reader.getPITarget()) + " " + reader.getLocation());
         }
