@@ -37,7 +37,9 @@
     <properties>
         <!-- Note that server-image-builder is independent of this pom, and needs its versions updated -->
         <version.wildfly>27.0.0.Alpha4</version.wildfly>
+        <version.wildfly.core>19.0.0.Beta15</version.wildfly.core>
 
+        <version.org.projectodd.vdx>1.1.6</version.org.projectodd.vdx>
         <!-- Misc -->
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>

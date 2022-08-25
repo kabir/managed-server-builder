@@ -24,7 +24,6 @@ Later
 * Metrics about how it is running - we need to know who is using what
 -- Where is this stored?
 
-
 Done
 ====
 * Use processing instruction in the pom.xml to be replaced with the eap.xml contents

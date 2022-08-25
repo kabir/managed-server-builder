@@ -18,13 +18,13 @@
 
 package org.wildfly.managed.server.builder.tool;
 
-import org.wildfly.managed.server.builder.tool.parser.ElementNode;
-import org.wildfly.managed.server.builder.tool.parser.ServerConfigParser;
 import org.wildfly.managed.server.builder.tool.parser.FormattingXMLStreamWriter;
-import org.wildfly.managed.server.builder.tool.parser.Node;
-import org.wildfly.managed.server.builder.tool.parser.PomParser;
-import org.wildfly.managed.server.builder.tool.parser.ProcessingInstructionNode;
-import org.wildfly.managed.server.builder.tool.parser.TextNode;
+import org.wildfly.managed.server.builder.tool.parser.generic.ElementNode;
+import org.wildfly.managed.server.builder.tool.parser.generic.PomParser;
+import org.wildfly.managed.server.builder.tool.parser.generic.ProcessingInstructionNode;
+import org.wildfly.managed.server.builder.tool.parser.generic.TextNode;
+import org.wildfly.managed.server.builder.tool.parser.serverconfig.ServerConfig;
+import org.wildfly.managed.server.builder.tool.parser.serverconfig.ServerConfigParser;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -143,7 +143,7 @@ public class Tool {
         // - can easily get rid of the root element
         // - have some kind of structure in case we need to validate/enhance entries
         ServerConfigParser serverConfigXmlParser = new ServerConfigParser(environment.getServerConfigXmlPath());
-        serverConfigXmlParser.parse();
+        ServerConfig serverConfig = serverConfigXmlParser.parse();
 
         // Parse the pom
         PomParser pomParser = new PomParser(environment.getInputPomLocation());
@@ -151,7 +151,7 @@ public class Tool {
 
         // Add the server-config.xml layers to the pom
         ProcessingInstructionNode mavenPluginConfigPlaceholder = pomParser.getMavenPluginLayersPlaceholder();
-        mavenPluginConfigPlaceholder.addDelegate(serverConfigXmlParser.getRootNode().getNamedChildElement("layers"), true);
+        mavenPluginConfigPlaceholder.addDelegate(serverConfig.getLayers(), true);
 
         // If there was a server-init.cli, add instructions to enable it
         if (Files.exists(environment.getServerInitCliPath())) {

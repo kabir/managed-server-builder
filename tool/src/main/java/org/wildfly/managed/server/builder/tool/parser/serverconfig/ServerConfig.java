@@ -15,25 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.managed.server.builder.tool.parser;
 
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
+package org.wildfly.managed.server.builder.tool.parser.serverconfig;
 
-/**
- *
- * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
- */
-public class TextNode extends Node {
+public class ServerConfig {
+    private final Layers layers;
 
-    private final String text;
-
-    public TextNode(final String text){
-        this.text = text;
+    public ServerConfig(Layers layers) {
+        this.layers = layers;
     }
 
-    @Override
-    void marshall(XMLStreamWriter writer) throws XMLStreamException {
-        writer.writeCharacters(text);
+    public Layers getLayers() {
+        return layers;
     }
 }

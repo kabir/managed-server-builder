@@ -15,24 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.managed.server.builder.tool.parser;
+
+package org.wildfly.managed.server.builder.tool.parser.serverconfig;
+
+import org.wildfly.managed.server.builder.tool.parser.Node;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+import java.util.List;
 
-/**
- *
- * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
- */
-public class CDataNode extends Node {
-    final String cdata;
+public class Layers implements Node {
 
-    public CDataNode(final String cdata) {
-        this.cdata = cdata;
+    static final String LAYERS = "layers";
+    static final String LAYER = "layer";
+
+    private final List<String> layers;
+
+    public Layers(List<String> layers) {
+        this.layers = layers;
     }
 
     @Override
-    void marshall(XMLStreamWriter writer) throws XMLStreamException {
-        writer.writeCData(cdata);
+    public void marshall(XMLStreamWriter writer) throws XMLStreamException {
+        writer.writeStartElement(LAYERS);
+        for (String layer : layers) {
+            writer.writeStartElement(LAYER);
+            writer.writeCharacters(layer);
+            writer.writeEndElement();
+        }
+        writer.writeEndElement();
+    }
+
+    @Override
+    public boolean hasContent() {
+        return layers.size() > 0;
     }
 }

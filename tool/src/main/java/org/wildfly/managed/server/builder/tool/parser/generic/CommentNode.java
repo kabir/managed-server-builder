@@ -15,24 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.managed.server.builder.tool.parser;
+package org.wildfly.managed.server.builder.tool.parser.generic;
+
+import org.wildfly.managed.server.builder.tool.parser.Node;
+
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
 /**
  *
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  */
-public class AttributeValue {
-    protected String value;
+class CommentNode implements Node {
+    final String comment;
 
-    AttributeValue(String value){
-        this.value = value;
+    public CommentNode(final String comment) {
+        this.comment = comment;
     }
 
-    String getValue() {
-        return value;
-    }
-
-    void setValue(String value) {
-        this.value = value;
+    @Override
+    public void marshall(XMLStreamWriter writer) throws XMLStreamException {
+        writer.writeComment(comment);
     }
 }

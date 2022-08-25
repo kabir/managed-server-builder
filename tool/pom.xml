@@ -31,6 +31,4 @@
     <artifactId>wildfly-managed-server-builder-tool</artifactId>
 
     <packaging>jar</packaging>
-
-
 </project>

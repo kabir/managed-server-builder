@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.managed.server.builder.tool.parser;
+package org.wildfly.managed.server.builder.tool.parser.generic;
+
+import org.wildfly.managed.server.builder.tool.parser.Node;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -24,15 +26,15 @@ import javax.xml.stream.XMLStreamWriter;
  *
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  */
-class CommentNode extends Node {
-    final String comment;
+public class CDataNode implements Node {
+    final String cdata;
 
-    public CommentNode(final String comment) {
-        this.comment = comment;
+    public CDataNode(final String cdata) {
+        this.cdata = cdata;
     }
 
     @Override
-    void marshall(XMLStreamWriter writer) throws XMLStreamException {
-        writer.writeComment(comment);
+    public void marshall(XMLStreamWriter writer) throws XMLStreamException {
+        writer.writeCData(cdata);
     }
 }

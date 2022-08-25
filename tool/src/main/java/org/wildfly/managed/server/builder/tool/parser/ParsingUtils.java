@@ -17,19 +17,18 @@
  */
 package org.wildfly.managed.server.builder.tool.parser;
 
-import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
-
-import java.util.Map;
-
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import java.util.Map;
+
+import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
 
 /**
  *
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  */
 public class ParsingUtils {
-    static String getNextElement(XMLStreamReader reader, String name, Map<String, String> attributes, boolean getElementText) throws XMLStreamException {
+    public static String getNextElement(XMLStreamReader reader, String name, Map<String, String> attributes, boolean getElementText) throws XMLStreamException {
         if (!reader.hasNext()) {
             throw new XMLStreamException("Expected more elements", reader.getLocation());
         }

@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.managed.server.builder.tool.parser;
+package org.wildfly.managed.server.builder.tool.parser.generic;
+
+import org.wildfly.managed.server.builder.tool.parser.Node;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -24,9 +26,16 @@ import javax.xml.stream.XMLStreamWriter;
  *
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  */
-public interface Node {
-    void marshall(XMLStreamWriter writer) throws XMLStreamException;
-    default boolean hasContent() {
-        return true;
+public class TextNode implements Node {
+
+    private final String text;
+
+    public TextNode(final String text){
+        this.text = text;
+    }
+
+    @Override
+    public void marshall(XMLStreamWriter writer) throws XMLStreamException {
+        writer.writeCharacters(text);
     }
 }

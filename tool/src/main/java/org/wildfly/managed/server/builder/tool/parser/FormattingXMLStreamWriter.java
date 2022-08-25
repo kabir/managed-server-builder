@@ -22,14 +22,13 @@ package org.wildfly.managed.server.builder.tool.parser;
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  */
 
-import java.util.ArrayDeque;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+import java.util.ArrayDeque;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * An XML stream writer which nicely formats the XML for configuration files.

@@ -15,18 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.managed.server.builder.tool.parser;
-
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
+package org.wildfly.managed.server.builder.tool.parser.generic;
 
 /**
  *
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  */
-public interface Node {
-    void marshall(XMLStreamWriter writer) throws XMLStreamException;
-    default boolean hasContent() {
-        return true;
+public class AttributeValue {
+    protected String value;
+
+    AttributeValue(String value){
+        this.value = value;
+    }
+
+    String getValue() {
+        return value;
+    }
+
+    void setValue(String value) {
+        this.value = value;
     }
 }
