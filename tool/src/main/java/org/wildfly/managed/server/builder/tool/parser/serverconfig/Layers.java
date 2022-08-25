@@ -35,6 +35,10 @@ public class Layers implements Node {
         this.layers = layers;
     }
 
+    public List<String> getLayers() {
+        return layers;
+    }
+
     @Override
     public void marshall(XMLStreamWriter writer) throws XMLStreamException {
         writer.writeStartElement(LAYERS);

@@ -2,6 +2,7 @@
 <server-config>
     <layers>
         <layer>cloud-server</layer>
+        <!--<layer>postgresql-driver</layer>-->
     </layers>
 </server-config>
 

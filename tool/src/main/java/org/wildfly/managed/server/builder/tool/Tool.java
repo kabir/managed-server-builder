@@ -19,6 +19,7 @@
 package org.wildfly.managed.server.builder.tool;
 
 import org.wildfly.managed.server.builder.tool.parser.FormattingXMLStreamWriter;
+import org.wildfly.managed.server.builder.tool.parser.Node;
 import org.wildfly.managed.server.builder.tool.parser.generic.ElementNode;
 import org.wildfly.managed.server.builder.tool.parser.generic.PomParser;
 import org.wildfly.managed.server.builder.tool.parser.generic.ProcessingInstructionNode;
@@ -28,6 +29,7 @@ import org.wildfly.managed.server.builder.tool.parser.serverconfig.ServerConfigP
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
@@ -152,6 +154,25 @@ public class Tool {
         // Add the server-config.xml layers to the pom
         ProcessingInstructionNode mavenPluginConfigPlaceholder = pomParser.getMavenPluginLayersPlaceholder();
         mavenPluginConfigPlaceholder.addDelegate(serverConfig.getLayers(), true);
+
+        //
+        for (String layer : serverConfig.getLayers().getLayers()) {
+            if (environment.getDatasourceGalleonPackLayers().contains(layer)) {
+                ProcessingInstructionNode datasourcesFeaturePackPlaceholder = pomParser.getDatasourcesFeaturePackPlaceholder();
+                datasourcesFeaturePackPlaceholder.addDelegate(new Node() {
+                    @Override
+                    public void marshall(XMLStreamWriter writer) throws XMLStreamException {
+                        writer.writeStartElement("feature-pack");
+                        writer.writeStartElement("location");
+                        // Defined along with the version in the pom
+                        writer.writeCharacters(Environment.DATA_SOURCES_GALLEON_PACK_LOCATION_PROPERTY);
+                        writer.writeEndElement();
+                        writer.writeEndElement();
+                    }
+                }, true);
+                break;
+            }
+        }
 
         // If there was a server-init.cli, add instructions to enable it
         if (Files.exists(environment.getServerInitCliPath())) {

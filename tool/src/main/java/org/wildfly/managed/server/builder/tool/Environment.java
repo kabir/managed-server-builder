@@ -23,10 +23,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class Environment implements AutoCloseable {
 
@@ -42,6 +46,9 @@ public class Environment implements AutoCloseable {
     // Name of the service loader file needed to enable the yaml mechanism
     static final String SERVER_INIT_YML_SERVICE_LOADER_NAME = "org.jboss.as.controller.persistence.ConfigurationExtension";
     static final String SERVER_INIT_YML_SERVICE_LOADER_CONTENTS = "org.jboss.as.controller.persistence.yaml.YamlConfigurationExtension";
+
+    // This value is defined in the server-image-builder pom
+    static final String DATA_SOURCES_GALLEON_PACK_LOCATION_PROPERTY = "${wildfly.datasources.galleon.pack.location}";
 
     private static final Entry WAR_LOCATION =
             new Entry(true,
@@ -63,11 +70,14 @@ public class Environment implements AutoCloseable {
     private final Path serverInitYmlPath;
     private final Path serverInitYmlServiceLoaderPath;
 
-    public Environment(InputStream warInputStream, Path serverImageBuilderLocation) throws IOException {
+    private final Set<String> datasourceGalleonPackLayers;
+
+    private Environment(InputStream warInputStream, Path serverImageBuilderLocation, Set<String> datasourceGalleonPackLayers) throws IOException {
         this.warInputStream = warInputStream;
         this.serverImageBuilderLocation = serverImageBuilderLocation;
         inputPomLocation = serverImageBuilderLocation.resolve("input-pom.xml");
         createdPomLocation = serverImageBuilderLocation.resolve("pom.xml");
+        this.datasourceGalleonPackLayers = datasourceGalleonPackLayers;
 
         // The deployment and files to be extracted from it go into the files/ folder of the
         // server-image-builder
@@ -80,6 +90,8 @@ public class Environment implements AutoCloseable {
         serverInitCliPath = serverBuilderFilesLocation.resolve(SERVER_INIT_CLI_FILE_NAME);
         serverInitYmlPath = serverBuilderFilesLocation.resolve(SERVER_INIT_YML_FILE_NAME);
         serverInitYmlServiceLoaderPath = serverBuilderFilesLocation.resolve(SERVER_INIT_YML_SERVICE_LOADER_NAME);
+
+
     }
 
     public InputStream getWarInputStream() {
@@ -114,6 +126,10 @@ public class Environment implements AutoCloseable {
         return serverInitYmlServiceLoaderPath;
     }
 
+    public Set<String> getDatasourceGalleonPackLayers() {
+        return datasourceGalleonPackLayers;
+    }
+
     @Override
     public void close() throws Exception {
         safeClose(warInputStream);
@@ -127,9 +143,12 @@ public class Environment implements AutoCloseable {
             if (!Files.exists(serverImageBuilderLocation)) {
                 throw new IllegalStateException("Cannot find " + serverImageBuilderLocation);
             }
+
+            Set<String> datasourceGalleonPackLayers = populateDatasourceGalleonPackLayers();
             return new Environment(
                     warInputStream,
-                    serverImageBuilderLocation);
+                    serverImageBuilderLocation,
+                    datasourceGalleonPackLayers);
         } catch (Throwable t) {
             safeClose(warInputStream);
             if (t instanceof RuntimeException) {
@@ -140,6 +159,23 @@ public class Environment implements AutoCloseable {
             }
             throw new RuntimeException(t);
         }
+    }
+
+    private static Set<String> populateDatasourceGalleonPackLayers() throws IOException, URISyntaxException {
+        URL url = Environment.class.getClassLoader().getResource("datasource-layers.txt");
+        if (url == null) {
+            throw new IllegalStateException("Missing datasource-layers.txt");
+        }
+
+        List<String> lines = Files.readAllLines(Path.of(url.toURI()));
+        Set<String> layers = new HashSet<>();
+        for (String line : lines) {
+            line = line.trim();
+            if (line.length() > 0 && !line.startsWith("#")) {
+                layers.add(line);
+            }
+        }
+        return layers;
     }
 
     private static InputStream getLocalOrRemoteInputStream(String location) throws IOException {

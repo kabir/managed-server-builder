@@ -41,12 +41,15 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
 
         <!-- Feature pack versions -->
         <version.wildfly.cloud.galleon.pack>2.0.0.Alpha4</version.wildfly.cloud.galleon.pack>
-        <version.wildfly.datasources.galleon.pack>2.2.2.Final</version.wildfly.datasources.galleon.pack>
+        <version.wildfly.datasources.galleon.pack>2.2.4.Final</version.wildfly.datasources.galleon.pack>
 
         <!-- Plugin versions -->
         <version.io.fabric8.docker-maven-plugin>0.39.0</version.io.fabric8.docker-maven-plugin>
         <version.org.wildfly.plugins.wildfly-maven-plugin>4.0.0.Beta3</version.org.wildfly.plugins.wildfly-maven-plugin>
         <version.org.apache.maven.plugins.maven-resource-plugin>3.2.0</version.org.apache.maven.plugins.maven-resource-plugin>
+
+        <!-- This property will be used for the location of the cloud galleon pack if the tool decides it needs to add it -->
+        <wildfly.datasources.galleon.pack.location>org.wildfly:wildfly-datasources-preview-galleon-pack:${version.wildfly.datasources.galleon.pack}</wildfly.datasources.galleon.pack.location>
 
         <!-- Misc. -->
         <maven.compiler.source>11</maven.compiler.source>
@@ -63,7 +66,8 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                 org.wildfly:wildfly-galleon-pack:26.0.0.Final, or
                 wildfly@maven(org.jboss.universe:community-universe):current#26.0.0.Final
         -->
-        <wildfly.feature-pack.location>wildfly@maven(org.jboss.universe:community-universe)</wildfly.feature-pack.location>
+        <!--<wildfly.feature-pack.location>wildfly@maven(org.jboss.universe:community-universe)</wildfly.feature-pack.location>-->
+        <wildfly.feature-pack.location>org.wildfly:wildfly-galleon-pack:27.0.0.Alpha4</wildfly.feature-pack.location>
     </properties>
     <build>
         <pluginManagement>
@@ -99,7 +103,8 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                         <feature-pack>
                             <location>org.wildfly.cloud:wildfly-cloud-galleon-pack:${version.wildfly.cloud.galleon.pack}</location>
                         </feature-pack>
-                        <!-- TODO datasources cloud feature pack -->
+
+                        <?DATASOURCES_FEATURE_PACK?>
                     </feature-packs>
                     <?MAVEN_PLUGIN_LAYERS?>
                     <galleon-options>

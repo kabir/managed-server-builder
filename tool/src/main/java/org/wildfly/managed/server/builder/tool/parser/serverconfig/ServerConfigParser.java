@@ -65,7 +65,6 @@ public class ServerConfigParser  {
             while (reader.hasNext()) {
                 if (reader.next() == START_ELEMENT) {
                     final String element = reader.getLocalName();
-                    System.out.println(element);
                     switch (element) {
                         case SERVER_CONFIG:
                             if (serverConfig != null) {
@@ -93,7 +92,6 @@ public class ServerConfigParser  {
         Layers layers = null;
         while (reader.hasNext() && reader.nextTag() != END_ELEMENT) {
             final String element = reader.getLocalName();
-            System.out.println(element);
             switch (element) {
                 case Layers.LAYERS:
                     if (layers != null) {
@@ -113,7 +111,6 @@ public class ServerConfigParser  {
         List<String> layers = new LinkedList<>();
         while (reader.hasNext() && reader.nextTag() != END_ELEMENT) {
             final String element = reader.getLocalName();
-            System.out.println(element);
             switch (element) {
                 case Layers.LAYER:
                     ensureNoAttributes(reader);

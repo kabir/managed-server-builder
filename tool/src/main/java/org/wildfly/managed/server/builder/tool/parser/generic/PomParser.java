@@ -17,11 +17,13 @@
  */
 package org.wildfly.managed.server.builder.tool.parser.generic;
 
+import org.wildfly.managed.server.builder.tool.parser.Node;
 import org.wildfly.managed.server.builder.tool.parser.ParsingUtils;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -40,6 +42,7 @@ import static javax.xml.stream.XMLStreamConstants.START_DOCUMENT;
 public class PomParser extends NodeParser {
     public static final String MAVEN_PLUGIN_LAYERS_PI = "MAVEN_PLUGIN_LAYERS";
     public static final String DOCKER_PLUGIN_ENV_VAR_PI = "DOCKER_PLUGIN_ENV_VARS";
+    public static final String DATASOURCES_FEATURE_PACK_PI = "DATASOURCES_FEATURE_PACK";
     private static final String ROOT_ELEMENT_NAME = "project";
 
     private final Path inputFile;
@@ -47,6 +50,7 @@ public class PomParser extends NodeParser {
 
     private ProcessingInstructionNode mavenPluginLayersPlaceholder;
     private ProcessingInstructionNode dockerPluginEnvVarsPlaceholder;
+    private ProcessingInstructionNode datasourcesFeaturePackPlaceholder;
 
     public PomParser(Path inputFile) {
         this.inputFile = inputFile;
@@ -62,6 +66,10 @@ public class PomParser extends NodeParser {
 
     public ProcessingInstructionNode getDockerPluginEnvVarsPlaceholder() {
         return dockerPluginEnvVarsPlaceholder;
+    }
+
+    public ProcessingInstructionNode getDatasourcesFeaturePackPlaceholder() {
+        return datasourcesFeaturePackPlaceholder;
     }
 
     public void parse() throws IOException, XMLStreamException {
@@ -92,7 +100,9 @@ public class PomParser extends NodeParser {
         if (dockerPluginEnvVarsPlaceholder == null) {
             missing.add(toProcessingInstruction(DOCKER_PLUGIN_ENV_VAR_PI));
         }
-
+        if (datasourcesFeaturePackPlaceholder == null) {
+            missing.add(toProcessingInstruction(DATASOURCES_FEATURE_PACK_PI));
+        }
         if (missing.size() > 0) {
             throw new IllegalStateException("The input pom is missing the following processing instructions: " + missing);
         }
@@ -113,6 +123,9 @@ public class PomParser extends NodeParser {
         } else if (pi.equals(DOCKER_PLUGIN_ENV_VAR_PI)) {
             node = createProcessingInstruction(data, parent, pi, dockerPluginEnvVarsPlaceholder);
             dockerPluginEnvVarsPlaceholder = node;
+        } else if (pi.equals(DATASOURCES_FEATURE_PACK_PI)) {
+            node = createProcessingInstruction(data, parent, pi, dockerPluginEnvVarsPlaceholder);
+            datasourcesFeaturePackPlaceholder = node;
         } else {
             throw new IllegalStateException("Unknown processing instruction " + toProcessingInstruction(reader.getPITarget()) + " " + reader.getLocation());
         }
@@ -125,7 +138,7 @@ public class PomParser extends NodeParser {
             throw new IllegalStateException(toProcessingInstruction(processingInstructionName) + " should not take any data");
         }
         if (existing != null) {
-            throw new IllegalStateException("Can only have one occurance of " + toProcessingInstruction(processingInstructionName));
+            throw new IllegalStateException("Can only have one occurrence of " + toProcessingInstruction(processingInstructionName));
         }
         return new ProcessingInstructionNode(parent, processingInstructionName, null);
     }
