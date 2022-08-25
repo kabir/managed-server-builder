@@ -36,14 +36,14 @@ import static javax.xml.stream.XMLStreamConstants.START_DOCUMENT;
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  */
 public class PomParser extends NodeParser {
-    public static final String MAVEN_PLUGIN_CONFIG_PI = "MAVEN_PLUGIN_CONFIG";
+    public static final String MAVEN_PLUGIN_LAYERS_PI = "MAVEN_PLUGIN_LAYERS";
     public static final String DOCKER_PLUGIN_ENV_VAR_PI = "DOCKER_PLUGIN_ENV_VARS";
     private static final String ROOT_ELEMENT_NAME = "project";
 
     private final Path inputFile;
     private ElementNode root;
 
-    private ProcessingInstructionNode mavenPluginConfigPlaceholder;
+    private ProcessingInstructionNode mavenPluginLayersPlaceholder;
     private ProcessingInstructionNode dockerPluginEnvVarsPlaceholder;
 
     public PomParser(Path inputFile) {
@@ -54,8 +54,8 @@ public class PomParser extends NodeParser {
         return root;
     }
 
-    public ProcessingInstructionNode getMavenPluginConfigPlaceholder() {
-        return mavenPluginConfigPlaceholder;
+    public ProcessingInstructionNode getMavenPluginLayersPlaceholder() {
+        return mavenPluginLayersPlaceholder;
     }
 
     public ProcessingInstructionNode getDockerPluginEnvVarsPlaceholder() {
@@ -84,8 +84,8 @@ public class PomParser extends NodeParser {
 
     private void validateAllProcessingInstructionsExist() {
         Set<String> missing = new HashSet<>();
-        if (mavenPluginConfigPlaceholder == null) {
-            missing.add(toProcessingInstruction(MAVEN_PLUGIN_CONFIG_PI));
+        if (mavenPluginLayersPlaceholder == null) {
+            missing.add(toProcessingInstruction(MAVEN_PLUGIN_LAYERS_PI));
         }
         if (dockerPluginEnvVarsPlaceholder == null) {
             missing.add(toProcessingInstruction(DOCKER_PLUGIN_ENV_VAR_PI));
@@ -105,9 +105,9 @@ public class PomParser extends NodeParser {
         ProcessingInstructionNode node;
         String pi = reader.getPITarget();
         Map<String, String> data = parseProcessingInstructionData(reader.getPIData());
-        if (pi.equals(MAVEN_PLUGIN_CONFIG_PI)) {
-            node = createProcessingInstruction(data, parent, pi, mavenPluginConfigPlaceholder);
-            mavenPluginConfigPlaceholder = node;
+        if (pi.equals(MAVEN_PLUGIN_LAYERS_PI)) {
+            node = createProcessingInstruction(data, parent, pi, mavenPluginLayersPlaceholder);
+            mavenPluginLayersPlaceholder = node;
         } else if (pi.equals(DOCKER_PLUGIN_ENV_VAR_PI)) {
             node = createProcessingInstruction(data, parent, pi, dockerPluginEnvVarsPlaceholder);
             dockerPluginEnvVarsPlaceholder = node;

@@ -39,7 +39,7 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
         <!-- Image creation properties -->
         <image.name.wildfly.runtime>quay.io/wildfly-snapshots/wildfly-runtime-jdk11-multi-arch:latest</image.name.wildfly.runtime>
 
-        <version.wildfly>27.0.0.Alpha4-SNAPSHOT</version.wildfly>
+        <!-- Feature pack versions -->
         <version.wildfly.cloud.galleon.pack>2.0.0.Alpha4</version.wildfly.cloud.galleon.pack>
         <version.wildfly.datasources.galleon.pack>2.2.2.Final</version.wildfly.datasources.galleon.pack>
 
@@ -54,6 +54,16 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
 
         <!-- 'Constants' -->
         <server.config.init.dir>target/server/standalone/configuration/init</server.config.init.dir>
+
+        <!-- TODO Make these configurable in the server-config.xml -->
+        <plugin.fork.embedded>true</plugin.fork.embedded>
+        <!--
+            Downloads the latest WildFly Galleon feature pack.
+            Alternative formats when specifying version:
+                org.wildfly:wildfly-galleon-pack:26.0.0.Final, or
+                wildfly@maven(org.jboss.universe:community-universe):current#26.0.0.Final
+        -->
+        <wildfly.feature-pack.location>wildfly@maven(org.jboss.universe:community-universe)</wildfly.feature-pack.location>
     </properties>
     <build>
         <pluginManagement>
@@ -80,7 +90,21 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
-                    <?MAVEN_PLUGIN_CONFIG?>
+                    <!-- Only relavant if we want to update the provisioned server -->
+                    <record-provisioning-state>false</record-provisioning-state>
+                    <feature-packs>
+                        <feature-pack>
+                            <location>${wildfly.feature-pack.location}</location>
+                        </feature-pack>
+                        <feature-pack>
+                            <location>org.wildfly.cloud:wildfly-cloud-galleon-pack:${version.wildfly.cloud.galleon.pack}</location>
+                        </feature-pack>
+                        <!-- TODO datasources cloud feature pack -->
+                    </feature-packs>
+                    <?MAVEN_PLUGIN_LAYERS?>
+                    <galleon-options>
+                        <jboss-fork-embedded>${plugin.fork.embedded}</jboss-fork-embedded>
+                    </galleon-options>
                 </configuration>
                 <executions>
                     <execution>

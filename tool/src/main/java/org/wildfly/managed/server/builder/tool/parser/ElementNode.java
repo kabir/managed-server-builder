@@ -64,7 +64,17 @@ public class ElementNode extends Node {
         return copy;
     }
 
-
+    public ElementNode getNamedChildElement(String name) {
+        for (Node node : children) {
+            if (node instanceof ElementNode) {
+                ElementNode en = (ElementNode) node;
+                if (name.equals(en.name)) {
+                    return en;
+                }
+            }
+        }
+        return null;
+    }
 
     public String getNamespace() {
         return namespace;

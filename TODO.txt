@@ -1,11 +1,13 @@
 General
 =======
-* Schema for the xml
+* Schema for the server-config.xml
+-- Better, more validating parser once things stabilise
 * Better selection of the base image
 -- In real life for OpenShift we probably want to use the latest
 -- But I need to be able to use the multiarch one
 -- Also we probably want some kind of 'staging' for upcoming images
 * I don't think the user should need to specify the WildFly version. Rather that is the job of the managed service to use the latest.
+-- Still it would be good to be able to override (e.g. for an old version, or staged)
 -- Same for the other feature packs we ship?
 -- What about user feature packs. Is that something we will support?
 

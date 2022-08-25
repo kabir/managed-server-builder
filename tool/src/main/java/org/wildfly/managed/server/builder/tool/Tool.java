@@ -149,11 +149,9 @@ public class Tool {
         PomParser pomParser = new PomParser(environment.getInputPomLocation());
         pomParser.parse();
 
-        // Add the server-config.xml contents to the pom
-        ProcessingInstructionNode mavenPluginConfigPlaceholder = pomParser.getMavenPluginConfigPlaceholder();
-        for (Node node : serverConfigXmlParser.getRootNode().getChildren()) {
-             mavenPluginConfigPlaceholder.addDelegate(node, true);
-        }
+        // Add the server-config.xml layers to the pom
+        ProcessingInstructionNode mavenPluginConfigPlaceholder = pomParser.getMavenPluginLayersPlaceholder();
+        mavenPluginConfigPlaceholder.addDelegate(serverConfigXmlParser.getRootNode().getNamedChildElement("layers"), true);
 
         // If there was a server-init.cli, add instructions to enable it
         if (Files.exists(environment.getServerInitCliPath())) {
