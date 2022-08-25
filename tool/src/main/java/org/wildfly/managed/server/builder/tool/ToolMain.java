@@ -20,6 +20,13 @@ package org.wildfly.managed.server.builder.tool;
 
 public class ToolMain {
     public static void main(String[] args) throws Exception{
+        String version = null;
+        try {
+            version = Environment.getToolVersion();
+        } catch (Exception ignore) {
+            version = "-";
+        }
+        System.out.println("Starting Managed Server Tool version " + version);
         try (Environment environment = Environment.initialize()) {
             Tool tool = new Tool(environment);
             tool.prepareDeployment();

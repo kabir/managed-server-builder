@@ -28,9 +28,11 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.jar.Manifest;
 
 public class Environment implements AutoCloseable {
 
@@ -133,6 +135,30 @@ public class Environment implements AutoCloseable {
     @Override
     public void close() throws Exception {
         safeClose(warInputStream);
+    }
+
+    static String getToolVersion() throws IOException {
+        return readManifestValue("tool-version");
+    }
+
+    static String readManifestValue(String name) throws IOException {
+        // Doing a simple ManifestUtils.class.getClassLoader().getResource("META-INF/MANIFEST.MF") doesn't always work
+        // since it sometimes first tries to load from jar:file:/System/Library/Java/Extensions/MRJToolkit.jar!/META-INF/MANIFEST.MF
+        for (Enumeration<URL> e = Environment.class.getClassLoader().getResources("META-INF/MANIFEST.MF"); e.hasMoreElements() ; ) {
+            URL url = e.nextElement();
+            try (InputStream stream = url.openStream()) {
+                Manifest manifest = null;
+                if (stream != null) {
+                    manifest = new Manifest(stream);
+                    String value = manifest.getMainAttributes().getValue(name);
+                    if (value != null) {
+                        return value;
+                    }
+                }
+            }
+        }
+
+        throw new IllegalStateException("Could not find manifest entry: " + name);
     }
 
     static Environment initialize() {

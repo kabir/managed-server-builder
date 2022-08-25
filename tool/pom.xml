@@ -42,10 +42,14 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>${version.org.apache.maven.plugins.maven-jar-plugin}</version>
                 <configuration>
+                    <finalName>wildfly-managed-server-builder-tool</finalName>
                     <archive>
                         <index>true</index>
                         <manifest>
                             <addClasspath>true</addClasspath>
+                            <mainClass>
+                                org.wildfly.managed.server.builder.tool.ToolMain
+                            </mainClass>
                         </manifest>
                         <manifestEntries>
                             <tool-version>${project.version}</tool-version>
