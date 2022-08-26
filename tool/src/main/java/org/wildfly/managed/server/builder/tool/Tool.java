@@ -152,10 +152,10 @@ public class Tool {
         pomParser.parse();
 
         // Add the server-config.xml layers to the pom
-        ProcessingInstructionNode mavenPluginConfigPlaceholder = pomParser.getMavenPluginLayersPlaceholder();
-        mavenPluginConfigPlaceholder.addDelegate(serverConfig.getLayers(), true);
+        ProcessingInstructionNode mavenPluginLayersPlaceholder = pomParser.getMavenPluginLayersPlaceholder();
+        mavenPluginLayersPlaceholder.addDelegate(serverConfig.getLayers(), true);
 
-        //
+        // Add the data sources feature pack if any of the data sources layers were used
         for (String layer : serverConfig.getLayers().getLayers()) {
             if (environment.getDatasourceGalleonPackLayers().contains(layer)) {
                 ProcessingInstructionNode datasourcesFeaturePackPlaceholder = pomParser.getDatasourcesFeaturePackPlaceholder();
@@ -165,13 +165,30 @@ public class Tool {
                         writer.writeStartElement("feature-pack");
                         writer.writeStartElement("location");
                         // Defined along with the version in the pom
-                        writer.writeCharacters(Environment.DATA_SOURCES_GALLEON_PACK_LOCATION_PROPERTY);
+                        writer.writeCharacters(Environment.DATA_SOURCES_FEATURE_PACK_LOCATION_PROPERTY);
                         writer.writeEndElement();
                         writer.writeEndElement();
                     }
                 }, true);
                 break;
             }
+        }
+
+        // Add the property overrides if we had any
+        if (environment.getMavenPropertyOverrides().size() > 0) {
+            ProcessingInstructionNode mavenPropertyOverrides = pomParser.getPropertyOverridesPlaceholder();
+            mavenPropertyOverrides.addDelegate(new Node(){
+                @Override
+                public void marshall(XMLStreamWriter writer) throws XMLStreamException {
+                    writer.writeStartElement("properties");
+                    for (Map.Entry<String, String> entry : environment.getMavenPropertyOverrides().entrySet()) {
+                        writer.writeStartElement(entry.getKey());
+                        writer.writeCharacters(entry.getValue());
+                        writer.writeEndElement();
+                    }
+                    writer.writeEndElement();
+                }
+            }, true);
         }
 
         // If there was a server-init.cli, add instructions to enable it

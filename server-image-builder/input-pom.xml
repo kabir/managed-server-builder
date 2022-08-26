@@ -37,37 +37,42 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
 
     <properties>
         <!-- Image creation properties -->
-        <image.name.wildfly.runtime>quay.io/wildfly-snapshots/wildfly-runtime-jdk11-multi-arch:latest</image.name.wildfly.runtime>
+        <server.runtime.base.image>quay.io/wildfly/wildfly-runtime-jdk11:latest</server.runtime.base.image>
 
         <!-- Feature pack versions -->
-        <version.wildfly.cloud.galleon.pack>2.0.0.Alpha4</version.wildfly.cloud.galleon.pack>
-        <version.wildfly.datasources.galleon.pack>2.2.4.Final</version.wildfly.datasources.galleon.pack>
+        <cloud.feature.pack.version>2.0.0.Alpha4</cloud.feature.pack.version>
+        <datasources.feature.pack.version>2.2.4.Final</datasources.feature.pack.version>
 
-        <!-- Plugin versions -->
+        <!-- ==========================================
+            Plugin versions
+            ========================================== -->
         <version.io.fabric8.docker-maven-plugin>0.39.0</version.io.fabric8.docker-maven-plugin>
         <version.org.wildfly.plugins.wildfly-maven-plugin>4.0.0.Beta3</version.org.wildfly.plugins.wildfly-maven-plugin>
         <version.org.apache.maven.plugins.maven-resource-plugin>3.2.0</version.org.apache.maven.plugins.maven-resource-plugin>
 
-        <!-- This property will be used for the location of the cloud galleon pack if the tool decides it needs to add it -->
-        <wildfly.datasources.galleon.pack.location>org.wildfly:wildfly-datasources-preview-galleon-pack:${version.wildfly.datasources.galleon.pack}</wildfly.datasources.galleon.pack.location>
+        <!-- This property will be used for the location of the datasources galleon pack if the tool decides it needs to add it -->
+        <datasources.feature.pack.location>org.wildfly:wildfly-datasources-preview-galleon-pack:${datasources.feature.pack.version}</datasources.feature.pack.location>
 
-        <!-- Misc. -->
+        <!-- ==========================================
+            Misc
+            ========================================== -->
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
 
-        <!-- 'Constants' -->
+        <!-- ==========================================
+            'Constants'
+            ========================================== -->
         <server.config.init.dir>target/server/standalone/configuration/init</server.config.init.dir>
-
-        <!-- TODO Make these configurable in the server-config.xml -->
+        <!-- TODO Make configurable? Where? -->
         <plugin.fork.embedded>true</plugin.fork.embedded>
         <!--
+            Overridable via the SERVER_FEATURE_PACK_LOCATION environment variable.
             Downloads the latest WildFly Galleon feature pack.
             Alternative formats when specifying version:
                 org.wildfly:wildfly-galleon-pack:26.0.0.Final, or
                 wildfly@maven(org.jboss.universe:community-universe):current#26.0.0.Final
         -->
-        <!--<wildfly.feature-pack.location>wildfly@maven(org.jboss.universe:community-universe)</wildfly.feature-pack.location>-->
-        <wildfly.feature-pack.location>org.wildfly:wildfly-galleon-pack:27.0.0.Alpha4</wildfly.feature-pack.location>
+        <server.feature-pack.location>wildfly@maven(org.jboss.universe:community-universe)</server.feature-pack.location>
     </properties>
     <build>
         <pluginManagement>
@@ -98,10 +103,10 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                     <record-provisioning-state>false</record-provisioning-state>
                     <feature-packs>
                         <feature-pack>
-                            <location>${wildfly.feature-pack.location}</location>
+                            <location>${server.feature-pack.location}</location>
                         </feature-pack>
                         <feature-pack>
-                            <location>org.wildfly.cloud:wildfly-cloud-galleon-pack:${version.wildfly.cloud.galleon.pack}</location>
+                            <location>org.wildfly.cloud:wildfly-cloud-galleon-pack:${cloud.feature.pack.version}</location>
                         </feature-pack>
 
                         <?DATASOURCES_FEATURE_PACK?>
@@ -161,7 +166,7 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                                     <name>wildfly-cloud-test-image/${project.name}:latest</name>
                                     <alias>server</alias>
                                     <build>
-                                        <from>${image.name.wildfly.runtime}</from>
+                                        <from>${server.runtime.base.image}</from>
                                         <env>
                                             <?DOCKER_PLUGIN_ENV_VARS?>
                                         </env>
@@ -293,6 +298,19 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>override-properties</id>
+            <activation>
+                <!--
+                    activeByDefault profiles don't work if another profile gets activated.
+                    Use presence of the files/ directory instead
+                -->
+                <file>
+                    <exists>files</exists>
+                </file>
+            </activation>
+            <?PROPERTY_OVERRIDES?>
         </profile>
     </profiles>
 </project>

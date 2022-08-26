@@ -29,8 +29,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.jar.Manifest;
 
@@ -50,7 +52,7 @@ public class Environment implements AutoCloseable {
     static final String SERVER_INIT_YML_SERVICE_LOADER_CONTENTS = "org.jboss.as.controller.persistence.yaml.YamlConfigurationExtension";
 
     // This value is defined in the server-image-builder pom
-    static final String DATA_SOURCES_GALLEON_PACK_LOCATION_PROPERTY = "${wildfly.datasources.galleon.pack.location}";
+    static final String DATA_SOURCES_FEATURE_PACK_LOCATION_PROPERTY = "${datasources.feature.pack.location}";
 
     private static final Entry WAR_LOCATION =
             new Entry(true,
@@ -61,6 +63,20 @@ public class Environment implements AutoCloseable {
             new Entry(true,
                     "wildfly.builder.server.image.builder.location",
                     "WILDFLY_BUILDER_SERVER_IMAGE_BUILDER_LOCATION");
+
+    private static final PropertyOverrideEntry[] propertyReplacementEntries = new PropertyOverrideEntry[]{
+            new PropertyOverrideEntry(
+                    "cloud.feature.pack.version",
+                    "CLOUD_FEATURE_PACK_VERSION"),
+            new PropertyOverrideEntry(
+                    "datasources.feature.pack.version",
+                    "DATASOURCES_FEATURE_PACK_VERSION"),
+            new PropertyOverrideEntry(
+                    "server.feature-pack.location",
+                    "SERVER_FEATURE_PACK_LOCATION"),
+            new PropertyOverrideEntry(
+                    "server.runtime.base.image",
+                    "SERVER_RUNTIME_BASE_IMAGE")};
 
     private final InputStream warInputStream;
     private final Path serverImageBuilderLocation;
@@ -73,13 +89,20 @@ public class Environment implements AutoCloseable {
     private final Path serverInitYmlServiceLoaderPath;
 
     private final Set<String> datasourceGalleonPackLayers;
+    private final Map<String, String> mavenPropertyOverrides;
 
-    private Environment(InputStream warInputStream, Path serverImageBuilderLocation, Set<String> datasourceGalleonPackLayers) throws IOException {
+    private Environment(
+            InputStream warInputStream,
+            Path serverImageBuilderLocation,
+            Set<String> datasourceGalleonPackLayers,
+            Map<String, String> mavenPropertyOverrides) throws IOException {
+
         this.warInputStream = warInputStream;
         this.serverImageBuilderLocation = serverImageBuilderLocation;
         inputPomLocation = serverImageBuilderLocation.resolve("input-pom.xml");
         createdPomLocation = serverImageBuilderLocation.resolve("pom.xml");
         this.datasourceGalleonPackLayers = datasourceGalleonPackLayers;
+        this.mavenPropertyOverrides = mavenPropertyOverrides;
 
         // The deployment and files to be extracted from it go into the files/ folder of the
         // server-image-builder
@@ -92,8 +115,6 @@ public class Environment implements AutoCloseable {
         serverInitCliPath = serverBuilderFilesLocation.resolve(SERVER_INIT_CLI_FILE_NAME);
         serverInitYmlPath = serverBuilderFilesLocation.resolve(SERVER_INIT_YML_FILE_NAME);
         serverInitYmlServiceLoaderPath = serverBuilderFilesLocation.resolve(SERVER_INIT_YML_SERVICE_LOADER_NAME);
-
-
     }
 
     public InputStream getWarInputStream() {
@@ -130,6 +151,10 @@ public class Environment implements AutoCloseable {
 
     public Set<String> getDatasourceGalleonPackLayers() {
         return datasourceGalleonPackLayers;
+    }
+
+    public Map<String, String> getMavenPropertyOverrides() {
+        return mavenPropertyOverrides;
     }
 
     @Override
@@ -170,11 +195,20 @@ public class Environment implements AutoCloseable {
                 throw new IllegalStateException("Cannot find " + serverImageBuilderLocation);
             }
 
+            Map<String, String> mavenPropertyOverrides = new HashMap<>();
+            for (PropertyOverrideEntry entry : propertyReplacementEntries) {
+                String override = entry.getOverride();
+                if (override != null) {
+                    mavenPropertyOverrides.put(entry.property, override);
+                }
+            }
+
             Set<String> datasourceGalleonPackLayers = populateDatasourceGalleonPackLayers();
             return new Environment(
                     warInputStream,
                     serverImageBuilderLocation,
-                    datasourceGalleonPackLayers);
+                    datasourceGalleonPackLayers,
+                    mavenPropertyOverrides);
         } catch (Throwable t) {
             safeClose(warInputStream);
             if (t instanceof RuntimeException) {
@@ -230,7 +264,7 @@ public class Environment implements AutoCloseable {
 
     private static class Entry {
         private final boolean required;
-        private final String property;
+        protected final String property;
         private final String envVar;
 
         public Entry(boolean required, String property, String envVar) {
@@ -257,4 +291,15 @@ public class Environment implements AutoCloseable {
             return null;
         }
     }
+
+    private static class PropertyOverrideEntry extends Entry {
+        public PropertyOverrideEntry(String property, String envVar) {
+            super(false, property, envVar);
+        }
+
+        String getOverride() {
+            return super.read();
+        }
+    }
+
 }

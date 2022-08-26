@@ -43,6 +43,7 @@ public class PomParser extends NodeParser {
     public static final String MAVEN_PLUGIN_LAYERS_PI = "MAVEN_PLUGIN_LAYERS";
     public static final String DOCKER_PLUGIN_ENV_VAR_PI = "DOCKER_PLUGIN_ENV_VARS";
     public static final String DATASOURCES_FEATURE_PACK_PI = "DATASOURCES_FEATURE_PACK";
+    public static final String PROPERTY_OVERRIDES_PI = "PROPERTY_OVERRIDES";
     private static final String ROOT_ELEMENT_NAME = "project";
 
     private final Path inputFile;
@@ -51,6 +52,7 @@ public class PomParser extends NodeParser {
     private ProcessingInstructionNode mavenPluginLayersPlaceholder;
     private ProcessingInstructionNode dockerPluginEnvVarsPlaceholder;
     private ProcessingInstructionNode datasourcesFeaturePackPlaceholder;
+    private ProcessingInstructionNode propertyOverridesPlaceholder;
 
     public PomParser(Path inputFile) {
         this.inputFile = inputFile;
@@ -70,6 +72,10 @@ public class PomParser extends NodeParser {
 
     public ProcessingInstructionNode getDatasourcesFeaturePackPlaceholder() {
         return datasourcesFeaturePackPlaceholder;
+    }
+
+    public ProcessingInstructionNode getPropertyOverridesPlaceholder() {
+        return propertyOverridesPlaceholder;
     }
 
     public void parse() throws IOException, XMLStreamException {
@@ -103,6 +109,9 @@ public class PomParser extends NodeParser {
         if (datasourcesFeaturePackPlaceholder == null) {
             missing.add(toProcessingInstruction(DATASOURCES_FEATURE_PACK_PI));
         }
+        if (propertyOverridesPlaceholder == null) {
+            missing.add(toProcessingInstruction(PROPERTY_OVERRIDES_PI));
+        }
         if (missing.size() > 0) {
             throw new IllegalStateException("The input pom is missing the following processing instructions: " + missing);
         }
@@ -126,6 +135,9 @@ public class PomParser extends NodeParser {
         } else if (pi.equals(DATASOURCES_FEATURE_PACK_PI)) {
             node = createProcessingInstruction(data, parent, pi, dockerPluginEnvVarsPlaceholder);
             datasourcesFeaturePackPlaceholder = node;
+        } else if (pi.equals(PROPERTY_OVERRIDES_PI)) {
+            node = createProcessingInstruction(data, parent, pi, propertyOverridesPlaceholder);
+            propertyOverridesPlaceholder = node;
         } else {
             throw new IllegalStateException("Unknown processing instruction " + toProcessingInstruction(reader.getPITarget()) + " " + reader.getLocation());
         }

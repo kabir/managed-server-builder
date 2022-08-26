@@ -1,15 +1,7 @@
 General
 =======
-* Schema for the server-config.xml
--- Better, more validating parser once things stabilise
-* Better selection of the base image
--- In real life for OpenShift we probably want to use the latest
--- But I need to be able to use the multiarch one
--- Also we probably want some kind of 'staging' for upcoming images
-* I don't think the user should need to specify the WildFly version. Rather that is the job of the managed service to use the latest.
--- Still it would be good to be able to override (e.g. for an old version, or staged)
--- Same for the other feature packs we ship?
--- What about user feature packs. Is that something we will support?
+* What about user feature packs. Is that something we will support?
+-- MAYBE for WildFly, but probably not for EAP?
 
 Docker image
 ============
@@ -29,3 +21,27 @@ Done
 * Use processing instruction in the pom.xml to be replaced with the eap.xml contents
 * Add CLI files in known location in the jar
 * YAML as an alternative to CLI configuration
+* Pick out latest WildFly Galleon Pack from universe
+-- cloud and datasources Galleon packs also use latest version in GAV
+* Schema and typed parser for the server-config.xml
+* Override base image, wildfly feature pack location and cloud/ds feature pack versions via env vars
+-- I don't think we want to make this easy for users?
+-- But it seems useful for staging of new images/devs who need the multiarch image etc.
+* Override wildfly galleon pack location via env var (I don't think we want to make it easy for users to do this)
+- Think it is important for staging/trying old versions etc.
+
+
+Environment variables
+=====================
+# Needed
+--------
+WILDFLY_BUILDER_WAR_LOCATION=/Users/kabir/sourcecontrol/wildfly/managed-server-builder/test-deployment/target/wildfly-managed-server-builder-test-deployment-1.0-SNAPSHOT.war
+WILDFLY_BUILDER_SERVER_IMAGE_BUILDER_LOCATION=/Users/kabir/sourcecontrol/wildfly/managed-server-builder/server-image-builder
+(on a Mac you also need SERVER_RUNTIME_BASE_IMAGE=quay.io/wildfly-snapshots/wildfly-runtime-jdk11-multi-arch:latest)
+
+# Used to override things
+-------------------------
+CLOUD_FEATURE_PACK_VERSION=2.0.0.Alpha2
+DATASOURCES_FEATURE_PACK_VERSION=2.2.2.Final
+SERVER_FEATURE_PACK_LOCATION=org.wildfly:wildfly-galleon-pack:27.0.0.Alpha4
+SERVER_RUNTIME_BASE_IMAGE=quay.io/wildfly-snapshots/wildfly-runtime-jdk11-multi-arch:latest
