@@ -150,58 +150,72 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>build-server</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                        <configuration>
-                            <images>
-                                <image>
-                                    <name>wildfly-cloud-test-image/${project.name}:latest</name>
-                                    <alias>server</alias>
-                                    <build>
-                                        <from>${server.runtime.base.image}</from>
-                                        <env>
-                                            <?DOCKER_PLUGIN_ENV_VARS?>
-                                        </env>
-                                        <assemblies>
-                                            <assembly>
-                                                <name>copy-server</name>
-                                                <mode>dir</mode>
-                                                <user>jboss:root</user>
-                                                <targetDir>/opt/server</targetDir>
-                                                <inline>
-                                                    <formats>
-                                                        <format>dir</format>
-                                                    </formats>
-                                                    <fileSets>
-                                                        <fileSet>
-                                                            <directory>target/server</directory>
-                                                            <outputDirectory>/</outputDirectory>
-                                                            <includes>
-                                                                <include>**</include>
-                                                            </includes>
-                                                        </fileSet>
-                                                    </fileSets>
-                                                </inline>
-                                            </assembly>
-                                        </assemblies>
-                                    </build>
-                                </image>
-                            </images>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
     <profiles>
+        <profile>
+            <!--
+                In the runtime image we will not need this.
+                Keep it around for now in case it is useful for local testing.
+                Also, it serves as a reminder that we need to set CLI_LAUNCH_SCRIPT and SERVER_ARG in the
+                resulting image in order to be able to run the init CLI script and the init yaml.
+            -->
+            <id>docker</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.fabric8</groupId>
+                        <artifactId>docker-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>build-server</id>
+                                <phase>process-classes</phase>
+                                <goals>
+                                    <goal>build</goal>
+                                </goals>
+                                <configuration>
+                                    <images>
+                                        <image>
+                                            <name>wildfly-cloud-test-image/${project.name}:latest</name>
+                                            <alias>server</alias>
+                                            <build>
+                                                <from>${server.runtime.base.image}</from>
+                                                <env>
+                                                    <?DOCKER_PLUGIN_ENV_VARS?>
+                                                </env>
+                                                <assemblies>
+                                                    <assembly>
+                                                        <name>copy-server</name>
+                                                        <mode>dir</mode>
+                                                        <user>jboss:root</user>
+                                                        <targetDir>/opt/server</targetDir>
+                                                        <inline>
+                                                            <formats>
+                                                                <format>dir</format>
+                                                            </formats>
+                                                            <fileSets>
+                                                                <fileSet>
+                                                                    <directory>target/server</directory>
+                                                                    <outputDirectory>/</outputDirectory>
+                                                                    <includes>
+                                                                        <include>**</include>
+                                                                    </includes>
+                                                                </fileSet>
+                                                            </fileSets>
+                                                        </inline>
+                                                    </assembly>
+                                                </assemblies>
+                                            </build>
+                                        </image>
+                                    </images>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <!--
                 Copies across the server-init.cli extracted from the deployment if there was one.
