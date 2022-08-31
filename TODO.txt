@@ -45,3 +45,6 @@ CLOUD_FEATURE_PACK_VERSION=2.0.0.Alpha2
 DATASOURCES_FEATURE_PACK_VERSION=2.2.2.Final
 SERVER_FEATURE_PACK_LOCATION=org.wildfly:wildfly-galleon-pack:27.0.0.Alpha4
 SERVER_RUNTIME_BASE_IMAGE=quay.io/wildfly-snapshots/wildfly-runtime-jdk11-multi-arch:latest
+
+
+WILDFLY_BUILDER_WAR_LOCATION=/Users/kabir/sourcecontrol/wildfly/managed-server-builder/test-deployment/target/wildfly-managed-server-builder-test-deployment-1.0-SNAPSHOT.war;WILDFLY_BUILDER_SERVER_IMAGE_BUILDER_LOCATION=/Users/kabir/sourcecontrol/wildfly/managed-server-builder/server-image-builder;SERVER_RUNTIME_BASE_IMAGE=quay.io/wildfly-snapshots/wildfly-runtime-jdk11-multi-arch:latest

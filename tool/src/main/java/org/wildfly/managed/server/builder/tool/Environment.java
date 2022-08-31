@@ -19,9 +19,12 @@
 package org.wildfly.managed.server.builder.tool;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -115,6 +118,22 @@ public class Environment implements AutoCloseable {
         serverInitCliPath = serverBuilderFilesLocation.resolve(SERVER_INIT_CLI_FILE_NAME);
         serverInitYmlPath = serverBuilderFilesLocation.resolve(SERVER_INIT_YML_FILE_NAME);
         serverInitYmlServiceLoaderPath = serverBuilderFilesLocation.resolve(SERVER_INIT_YML_SERVICE_LOADER_NAME);
+
+        // Copy the input-pom.xml out of the jar
+        URL inputPomUrl = Environment.class.getResource("/input-pom.xml");
+        if (inputPomUrl == null) {
+            throw new IllegalStateException("Could not find the bundled input-pom.xml");
+        }
+        try (InputStream in = new BufferedInputStream(inputPomUrl.openStream())) {
+            try (OutputStream out = new BufferedOutputStream(new FileOutputStream(inputPomLocation.toFile()))) {
+                byte[] buf = new byte[8092];
+                int len = in.read(buf);
+                while (len != -1) {
+                    out.write(buf, 0, len);
+                    len = in.read(buf);
+                }
+            }
+        }
     }
 
     public InputStream getWarInputStream() {
