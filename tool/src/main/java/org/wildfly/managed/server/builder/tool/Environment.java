@@ -20,10 +20,12 @@ package org.wildfly.managed.server.builder.tool;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -34,6 +36,7 @@ import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -241,12 +244,20 @@ public class Environment implements AutoCloseable {
     }
 
     private static Set<String> populateDatasourceGalleonPackLayers() throws IOException, URISyntaxException {
-        URL url = Environment.class.getClassLoader().getResource("datasource-layers.txt");
+        URL url = Environment.class.getResource("/datasource-layers.txt");
         if (url == null) {
             throw new IllegalStateException("Missing datasource-layers.txt");
         }
 
-        List<String> lines = Files.readAllLines(Path.of(url.toURI()));
+        List<String> lines = new LinkedList<>();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))){
+            String line = reader.readLine();
+            while (line != null) {
+                lines.add(line);
+                line = reader.readLine();
+            }
+        }
+
         Set<String> layers = new HashSet<>();
         for (String line : lines) {
             line = line.trim();
