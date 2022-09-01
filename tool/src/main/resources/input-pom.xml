@@ -33,7 +33,7 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
     </parent>
     <groupId>org.wildfly.managed-server-builder</groupId>
     <artifactId>wildfly-managed-server-builder-tool</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
