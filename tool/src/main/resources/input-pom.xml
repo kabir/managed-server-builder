@@ -149,6 +149,24 @@ TODO - the parser can't deal with the namespaced attributes. Figure that out if 
                             </resources>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>copy-managed-server-env</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/server/</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>files</directory>
+                                    <includes>
+                                        <include>managed-server.env</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>

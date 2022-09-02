@@ -79,6 +79,7 @@ public class Environment implements AutoCloseable {
         }
     }
 
+    private static final String INPUT_POM_FILE_NAME = "input-pom.xml";
 
     static final String SERVER_CONFIG_FILE_NAME = "server-config.xml";
 
@@ -91,6 +92,8 @@ public class Environment implements AutoCloseable {
     // Name of the service loader file needed to enable the yaml mechanism
     static final String SERVER_INIT_YML_SERVICE_LOADER_NAME = "org.jboss.as.controller.persistence.ConfigurationExtension";
     static final String SERVER_INIT_YML_SERVICE_LOADER_CONTENTS = "org.jboss.as.controller.persistence.yaml.YamlConfigurationExtension";
+
+    private static final String MANAGED_SERVER_ENV = "managed-server.env";
 
     // This value is defined in the server-image-builder pom
     static final String DATA_SOURCES_FEATURE_PACK_LOCATION_PROPERTY = "${datasources.feature.pack.location}";
@@ -128,6 +131,7 @@ public class Environment implements AutoCloseable {
     private final Path serverInitCliPath;
     private final Path serverInitYmlPath;
     private final Path serverInitYmlServiceLoaderPath;
+    private final Path managedServerEnvFilePath;
 
     private final Set<String> datasourceGalleonPackLayers;
     private final Map<String, String> mavenPropertyOverrides;
@@ -140,7 +144,6 @@ public class Environment implements AutoCloseable {
 
         this.warInputStream = warInputStream;
         this.serverImageBuilderLocation = serverImageBuilderLocation;
-        inputPomLocation = serverImageBuilderLocation.resolve("input-pom.xml");
         createdPomLocation = serverImageBuilderLocation.resolve("pom.xml");
         this.datasourceGalleonPackLayers = datasourceGalleonPackLayers;
         this.mavenPropertyOverrides = mavenPropertyOverrides;
@@ -152,10 +155,12 @@ public class Environment implements AutoCloseable {
             Files.createDirectories(serverBuilderFilesLocation);
         }
         serverImageDeploymentLocation = serverBuilderFilesLocation.resolve("ROOT.war");
+        inputPomLocation = serverBuilderFilesLocation.resolve(INPUT_POM_FILE_NAME);
         serverConfigXmlPath = serverBuilderFilesLocation.resolve(SERVER_CONFIG_FILE_NAME);
         serverInitCliPath = serverBuilderFilesLocation.resolve(SERVER_INIT_CLI_FILE_NAME);
         serverInitYmlPath = serverBuilderFilesLocation.resolve(SERVER_INIT_YML_FILE_NAME);
         serverInitYmlServiceLoaderPath = serverBuilderFilesLocation.resolve(SERVER_INIT_YML_SERVICE_LOADER_NAME);
+        managedServerEnvFilePath = serverBuilderFilesLocation.resolve(MANAGED_SERVER_ENV);
 
         // Copy the input-pom.xml out of the jar
         URL inputPomUrl = Environment.class.getResource("/input-pom.xml");
@@ -212,6 +217,10 @@ public class Environment implements AutoCloseable {
 
     public Map<String, String> getMavenPropertyOverrides() {
         return mavenPropertyOverrides;
+    }
+
+    public Path getManagedServerEnvFilePath() {
+        return managedServerEnvFilePath;
     }
 
     @Override

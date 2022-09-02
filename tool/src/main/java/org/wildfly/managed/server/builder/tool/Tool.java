@@ -39,6 +39,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -228,6 +229,20 @@ public class Tool {
             node.addChild(new TextNode(entry.getValue()));
             dockerPluginEnvVarsPlaceholder.addDelegate(node, true);
         }
+
+        // Write out the docker environment variables to the files/ folder
+        if (Files.exists(environment.getManagedServerEnvFilePath())) {
+            Files.delete(environment.getManagedServerEnvFilePath());
+        }
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(environment.getManagedServerEnvFilePath().toFile())))) {
+            for (Map.Entry<String, String> entry : environmentVariables.entrySet()) {
+                writer.write(entry.getKey());
+                writer.write('=');
+                writer.write(entry.getValue());
+                writer.newLine();
+            }
+        }
+
 
         // Write the updated pom
         FormattingXMLStreamWriter writer =
