@@ -49,6 +49,8 @@
                             </mainClass>
                         </manifest>
                         <manifestEntries>
+                            <!-- For the Environment class to pick out the proper MANIFEST.MF -->
+                            <tool-marker>1234567890987654321</tool-marker>
                             <tool-version>${project.version}</tool-version>
                         </manifestEntries>
                     </archive>
