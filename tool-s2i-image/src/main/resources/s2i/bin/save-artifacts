@@ -1,4 +1,0 @@
-#!/bin/sh
-
-#cd /tmp
-#tar cf - wildfly-managed-server-builder-tool.jar

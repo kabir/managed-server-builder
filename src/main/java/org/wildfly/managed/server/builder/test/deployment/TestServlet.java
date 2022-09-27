@@ -15,26 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.managed.server.builder.tool.parser.generic;
 
-import org.wildfly.managed.server.builder.tool.parser.Node;
+package org.wildfly.managed.server.builder.test.deployment;
 
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-/**
- *
- * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
- */
-public class CDataNode implements Node {
-    final String cdata;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
-    public CDataNode(final String cdata) {
-        this.cdata = cdata;
-    }
-
+@WebServlet(urlPatterns = {"/", "/*"})
+public class TestServlet extends HttpServlet {
     @Override
-    public void marshall(XMLStreamWriter writer) throws XMLStreamException {
-        writer.writeCData(cdata);
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.getOutputStream().write("Hello!!!!".getBytes(StandardCharsets.UTF_8));
     }
 }
