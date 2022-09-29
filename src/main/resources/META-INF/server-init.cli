@@ -1,1 +1,1 @@
-/system-property=testing:add(value=123)
+/system-property=cli-property:add(value="YAML is terrible!")

@@ -1,4 +1,4 @@
 wildfly-configuration:
   system-property:
-    testing2:
-      value: 456
+    yaml-property:
+      value: "No! YAML is the best!"

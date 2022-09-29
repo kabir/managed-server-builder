@@ -31,6 +31,10 @@ import java.nio.charset.StandardCharsets;
 public class TestServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.getOutputStream().write("Hello!!!!".getBytes(StandardCharsets.UTF_8));
+        String s = new StringBuilder("Hello!")
+            .append("\nFrom CLI: \t'" + System.getProperty("cli-property") + "'")
+            .append("\nFrom YAML: \t'" + System.getProperty("yaml-property") + "'")
+            .toString();
+        resp.getOutputStream().write(s.getBytes(StandardCharsets.UTF_8));
     }
 }
