@@ -32,8 +32,8 @@ public class TestServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String s = new StringBuilder("Hello!")
-            .append("\nFrom CLI: \t'" + System.getProperty("cli-property") + "'")
-            .append("\nFrom YAML: \t'" + System.getProperty("yaml-property") + "'")
+            .append("\nFrom CLI: \t'" + System.getProperty("cli") + "'")
+            .append("\nFrom YAML: \t'" + System.getProperty("yaml") + "'")
             .toString();
         resp.getOutputStream().write(s.getBytes(StandardCharsets.UTF_8));
     }

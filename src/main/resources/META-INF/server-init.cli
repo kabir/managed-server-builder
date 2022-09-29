@@ -1,1 +1,1 @@
-/system-property=cli-property:add(value="YAML is terrible!")
+/system-property=cli:add(value="YAML is terrible!")

@@ -1,4 +1,4 @@
 wildfly-configuration:
   system-property:
-    yaml-property:
+    yaml:
       value: "No! YAML is the best!"
